@@ -651,7 +651,7 @@ def main():
     st.set_page_config(layout="centered", page_title="Gerador de Laudo")
 
     # --- Cores UI ---
-    UI_COR_AZUL_SPTC = "#00478F"
+    UI_COR_AZUL_SPTC = "#eaeff2"
     UI_COR_CINZA_SPTC = "#6E6E6E"
 
     # --- MOVIDO: Data/Calendário (Acima da logo/título) ---
@@ -665,7 +665,7 @@ def main():
             data_formatada = f"{dia_semana}, {now.day} de {mes} de {now.year}"
             # Adiciona um pouco de margem inferior para separar da linha seguinte
             data_placeholder.markdown(f"""
-            <div style="text-align: right; font-size: 0.9em; color: {UI_COR_CINZA_SPTC}; line-height: 1.2; margin-bottom: 15px;">
+            <div style="text-align: right; font-size: 0.5em; color: {UI_COR_CINZA_SPTC}; line-height: 1.2; margin-bottom: 15px;">
                 <span>{data_formatada}</span><br>
                 <span style="font-size: 0.8em;">(Goiânia-GO)</span>
             </div>""", unsafe_allow_html=True)
