@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Gerador de Laudo Pericial v3.0 (Streamlit + Lógica Colab + Cores SPTC)
+Gerador de Laudo Pericial v3.1 (Streamlit + Lógica Colab + Cores SPTC - Layout Ajustado)
 
 Combina a interface Streamlit e formatação DOCX avançada com a lógica
 de geração de texto e entradas (lacre, RG) do script original do Colab.
 Usa a fonte 'Gadugi' e o método de itálico do script Colab.
+Layout do cabeçalho ajustado conforme feedback.
 
 Requerimentos:
     - streamlit
@@ -14,9 +15,9 @@ Requerimentos:
 
 Uso:
     1. Instale as dependências: pip install streamlit python-docx Pillow pytz
-    2. Salve este código como 'gerador_laudo_combinado.py'
+    2. Salve este código como 'gerador_laudo_combinado_v3_1.py' (ou outro nome)
     3. Salve a imagem do logo como 'logo_policia_cientifica.png' no mesmo diretório.
-    4. Execute o script: streamlit run gerador_laudo_combinado.py
+    4. Execute o script: streamlit run gerador_laudo_combinado_v3_1.py
     5. Interaja com a interface web para inserir dados e gerar o laudo.
     6. Baixe o laudo gerado como um arquivo .docx (nomeado com o RG da Perícia).
 """
@@ -94,7 +95,6 @@ TERMOS_ITALICO_ORIGINAL = [
 ]
 
 # --- Funções Auxiliares (Pluralização, Extenso, Parágrafo, Imagem) ---
-# (Mantidas as mesmas funções auxiliares da versão anterior - 'codigo bonito.txt')
 def pluralizar_palavra(palavra, quantidade):
     """Pluraliza palavras em português (com algumas regras básicas)."""
     if quantidade == 1:
@@ -385,7 +385,6 @@ def adicionar_material_recebido(doc, dados_laudo):
         subitem_texto = f", referente à amostra do subitem {subitem_ref} do laudo de constatação supracitado" if subitem_ref else ""
         item_num_str = f"1.{i + 1}" # Numeração corrigida para 1.x
         final_ponto = "."
-
         texto = (f"{item_num_str} {qtd} ({qtd_ext}) {porcao} de material {tipo_material}, {acond} {embalagem_final}{subitem_texto}{ref_texto}{final_ponto}")
         adicionar_paragrafo(doc, texto, style='Normal', align='justify')
 
@@ -486,7 +485,8 @@ def adicionar_conclusao(doc, subitens_cannabis, subitens_cocaina, dados_laudo):
         refs_str = " e ".join(itens_referencia)
         label = f"no item {refs_str}" if len(itens_referencia) == 1 else f"nos itens {refs_str}"
         conclusoes.append(f"no(s) material(is) descrito(s) {label}, foi detectada a presença de partes "
-                           f"da planta Cannabis sativa L., vulgarmente conhecida por maconha. A Cannabis sativa L. contém princípios ativos chamados canabinóis, dentre os quais se encontra o tetrahidrocanabinol, substância perturbadora do sistema nervoso central. "
+                           f"da planta Cannabis sativa L., vulgarmente conhecida por maconha. "
+                           f"A Cannabis sativa L. contém princípios ativos chamados canabinóis, dentre os quais se encontra o tetrahidrocanabinol, substância perturbadora do sistema nervoso central. "
                            f"Tanto a Cannabis sativa L. quanto a tetrahidrocanabinol são proscritas no país, com fulcro na Portaria nº 344/1998, atualizada por meio da RDC nº 970, de 19/03/2025, da Anvisa.") # Data da RDC do código Colab
 
     if subitens_cocaina:
@@ -648,53 +648,58 @@ def gerar_laudo_docx(dados_laudo):
 
 # --- Interface Streamlit ---
 def main():
-    st.set_page_config(layout="wide", page_title="Gerador de Laudo - Combinado")
+    st.set_page_config(layout="centered", page_title="Gerador de Laudo")
 
-    # --- Cabeçalho com Logo, Título, Data --- (Cores SPTC)
-    col1, col2, col3 = st.columns([1, 4, 2])
-
+    # --- Cores UI ---
     UI_COR_AZUL_SPTC = "#00478F"
     UI_COR_CINZA_SPTC = "#6E6E6E"
 
-    with col1:
+    # --- MOVIDO: Data/Calendário (Acima da logo/título) ---
+    data_placeholder = st.empty()
+    def atualizar_data():
+        try:
+            brasilia_tz = pytz.timezone('America/Sao_Paulo')
+            now = datetime.now(brasilia_tz)
+            dia_semana = dias_semana_portugues.get(now.weekday(), '')
+            mes = meses_portugues.get(now.month, '')
+            data_formatada = f"{dia_semana}, {now.day} de {mes} de {now.year}"
+            # Adiciona um pouco de margem inferior para separar da linha seguinte
+            data_placeholder.markdown(f"""
+            <div style="text-align: right; font-size: 0.9em; color: {UI_COR_CINZA_SPTC}; line-height: 1.2; margin-bottom: 15px;">
+                <span>{data_formatada}</span><br>
+                <span style="font-size: 0.8em;">(Goiânia-GO)</span>
+            </div>""", unsafe_allow_html=True)
+        except Exception as e:
+            now = datetime.now()
+            fallback_str = now.strftime("%d/%m/%Y")
+            data_placeholder.markdown(f"""
+            <div style="text-align: right; font-size: 0.9em; color: #FF5555; line-height: 1.2; margin-bottom: 15px;">
+                <span>{fallback_str} (Local)</span><br>
+                <span style="font-size: 0.8em;">Erro Fuso Horário: {e}</span>
+            </div>""", unsafe_allow_html=True)
+    atualizar_data() # Chama a função para exibir a data
+
+    # --- Cabeçalho com Logo e Título --- (Data foi movida para cima)
+    # Ajuste as proporções se necessário, removendo a coluna da data
+    col_logo, col_titulo = st.columns([1, 5]) # Ex: Proporção 1 para logo, 5 para título
+
+    with col_logo: # Coluna da Logo
         logo_path = "logo_policia_cientifica.png"
         try:
-            st.image(logo_path, width=150)
+            # Reduz a largura da imagem da logo
+            st.image(logo_path, width=100) # <<-- LARGURA REDUZIDA AQUI (Ajuste 100, 110, 120...)
         except FileNotFoundError:
             st.error(f"Erro: Logo '{logo_path}' não encontrado.")
             st.info("Coloque 'logo_policia_cientifica.png' na mesma pasta do script.")
         except Exception as e:
             st.warning(f"Logo não carregado: {e}")
 
-    with col2:
-        st.markdown(f'<h1 style="color: {UI_COR_AZUL_SPTC};">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
+    with col_titulo: # Coluna do Título
+        # Adicionado margin para tentar alinhar melhor com logo menor
+        st.markdown(f'<h1 style="color: {UI_COR_AZUL_SPTC}; margin-top: 0px; margin-bottom: 0px;">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
         st.markdown(f'<p style="color: {UI_COR_CINZA_SPTC}; font-size: 0.9em;">Identificação de Drogas - SPTC/GO (Versão Combinada)</p>', unsafe_allow_html=True)
 
-    with col3:
-        data_placeholder = st.empty()
-        def atualizar_data():
-            try:
-                brasilia_tz = pytz.timezone('America/Sao_Paulo')
-                now = datetime.now(brasilia_tz)
-                dia_semana = dias_semana_portugues.get(now.weekday(), '')
-                mes = meses_portugues.get(now.month, '')
-                data_formatada = f"{dia_semana}, {now.day} de {mes} de {now.year}"
-                data_placeholder.markdown(f"""
-                <div style="text-align: right; font-size: 0.9em; color: {UI_COR_CINZA_SPTC}; line-height: 1.2; margin-top: 10px;">
-                    <span>{data_formatada}</span><br>
-                    <span style="font-size: 0.8em;">(Goiânia-GO)</span>
-                </div>""", unsafe_allow_html=True)
-            except Exception as e:
-                now = datetime.now()
-                fallback_str = now.strftime("%d/%m/%Y")
-                data_placeholder.markdown(f"""
-                <div style="text-align: right; font-size: 0.9em; color: #FF5555; line-height: 1.2; margin-top: 10px;">
-                    <span>{fallback_str} (Local)</span><br>
-                    <span style="font-size: 0.8em;">Erro Fuso Horário: {e}</span>
-                </div>""", unsafe_allow_html=True)
-        atualizar_data()
-
-    st.markdown("---")
+    st.markdown("---") # Separador visual
 
     # --- Inicialização do Estado da Sessão (Adicionado lacre e rg_pericia) ---
     if 'dados_laudo' not in st.session_state:
