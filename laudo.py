@@ -181,8 +181,8 @@ def main():
     st.markdown("""
         <div class="laudo-info-box">
             <h3>1. Informações do Laudo</h3>
-            <input type="text" placeholder="Digite o número do lacre da contraprova:" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #eee; border-radius: 4px;">
-            <input type="text" placeholder="Digite o RG da perícia:" style="width: 100%; padding: 8px; border: 1px solid #eee; border-radius: 4px;">
+            <input type="text" placeholder="Digite o número do lacre da contraprova:" style="width: 10%; padding: 8px; margin-bottom: 8px; border: 1px solid #eee; border-radius: 4px;">
+            <input type="text" placeholder="Digite o RG da perícia:" style="width: 10%; padding: 8px; border: 1px solid #eee; border-radius: 4px;">
         </div>
     """, unsafe_allow_html=True)
     
@@ -202,7 +202,6 @@ def main():
         <div class="material-recebido-box">
             <h3>2. MATERIAL RECEBIDO</h3>
         </div>
-    """, unsafe_allow_html=True)
 
     num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
 
@@ -231,6 +230,7 @@ def main():
                 'ref': ref,
                 'pessoa': pessoa
             })
+    """, unsafe_allow_html=True)
             
     st.markdown("""
         <style>
