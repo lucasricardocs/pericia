@@ -679,7 +679,7 @@ def main():
         logo_path = "logo_policia_cientifica.png" # Caminho para o logo local
         try:
             # Tenta carregar o logo local e aumenta o tamanho
-            st.image(logo_path, width=200) # Logo maior
+            st.image(logo_path, width=150) # Logo maior
         except FileNotFoundError:
             # Erro se o arquivo local NÃO for encontrado (removido fallback de URL)
             st.error(f"Erro: Arquivo do logo '{logo_path}' não encontrado no diretório.")
@@ -744,7 +744,7 @@ def main():
          st.session_state.dados_laudo['itens'] = []
 
     # --- Coleta de Dados para o Laudo (Foco nos Itens) ---
-    st.header("Descrição dos Itens Recebidos (Seção 1 do Laudo)")
+    st.header("MATERIAL RECEBIDO PARA EXAME")
 
     numero_itens = st.number_input(
         "Número de tipos diferentes de material/acondicionamento a descrever",
