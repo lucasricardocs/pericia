@@ -647,8 +647,9 @@ def gerar_laudo_docx(dados_laudo):
     return document
 
 # --- Interface Streamlit ---
+st.set_page_config(layout="centered", page_title="Gerador de Laudo")
 def main():
-    st.set_page_config(layout="centered", page_title="Gerador de Laudo")
+st.set_page_config(layout="centered", page_title="Gerador de Laudo")
 
     # --- Cores UI ---
     UI_COR_AZUL_SPTC = "#eaeff2"
