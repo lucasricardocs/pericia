@@ -216,6 +216,7 @@ def main():
     with st.container(class="upload-image-box"):
         st.subheader("3. Upload da Imagem")
         uploaded_image = st.file_uploader("Selecione uma imagem do material recebido:", type=["png", "jpg", "jpeg"])
+        st.markdown("---") # Separador visual
    
     if st.button("Gerar Laudo"):
         document = Document()
