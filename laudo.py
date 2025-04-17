@@ -740,78 +740,84 @@ def main():
     # --- Coleta de Dados para o Laudo (Itens) ---
     st.header("1 MATERIAL RECEBIDO PARA EXAME")
 
-    numero_itens = st.number_input(
-        "Número de tipos diferentes de material/acondicionamento",
-        min_value=0,
-        value=max(0, len(st.session_state.dados_laudo.get('itens', []))),
-        step=1,
-        key="num_itens_input",
-        help="Quantos grupos distintos de material você recebeu?"
-    )
+numero_itens = st.number_input(
+    "Número de tipos diferentes de material/acondicionamento a descrever",
+    min_value=0,
+    value=max(0, len(st.session_state.dados_laudo.get('itens', []))),
+    step=1,
+    key="num_itens_input"
+)
 
-    # Lógica de atualização do estado (mantida igual)
-    current_num_itens = len(st.session_state.dados_laudo['itens'])
-    if numero_itens > current_num_itens:
-        for _ in range(numero_itens - current_num_itens):
-            st.session_state.dados_laudo['itens'].append({
-                'qtd': 1, 'tipo_mat': list(TIPOS_MATERIAL_BASE.keys())[0],
-                'emb': list(TIPOS_EMBALAGEM_BASE.keys())[0], 'cor_emb': None,
-                'ref': '', 'pessoa': ''
-            })
-    elif numero_itens < current_num_itens:
-            st.session_state.dados_laudo['itens'] = st.session_state.dados_laudo['itens'][:numero_itens]
+# --- Mantida a lógica de adição/remoção de itens ---
+current_num_itens = len(st.session_state.dados_laudo['itens'])
+if numero_itens > current_num_itens:
+    for _ in range(numero_itens - current_num_itens):
+        st.session_state.dados_laudo['itens'].append({
+            'qtd': 1, 'tipo_mat': list(TIPOS_MATERIAL_BASE.keys())[0],
+            'emb': list(TIPOS_EMBALAGEM_BASE.keys())[0], 'cor_emb': None,
+            'ref': '', 'pessoa': ''
+        })
+elif numero_itens < current_num_itens:
+    st.session_state.dados_laudo['itens'] = st.session_state.dados_laudo['itens'][:numero_itens]
 
-# Exibição simplificada dos itens
-    if numero_itens > 0:
-        for i in range(numero_itens):
-            with st.expander(f"Item 1.{i + 1}", expanded=True):
-                item = st.session_state.dados_laudo['itens'][i]
-                item_key = f"item_{i}_"
+# --- Interface simplificada mantendo os expanders ---
+if numero_itens > 0:
+    for i in range(numero_itens):
+        with st.expander(f"Item 1.{i + 1}", expanded=True):
+            item = st.session_state.dados_laudo['itens'][i]
             
-            # Linha 1 - Dados principais
-            col1, col2, col3 = st.columns([1, 2, 2])
+            # Linha 1
+            col1, col2 = st.columns([1, 3])
             with col1:
                 item['qtd'] = st.number_input(
-                    "Quantidade", min_value=1, value=item['qtd'],
-                    key=item_key+"qtd"
-                )
-            with col2:
-                item['tipo_mat'] = st.selectbox(
-                    "Tipo de material", options=list(TIPOS_MATERIAL_BASE.keys()),
-                    index=list(TIPOS_MATERIAL_BASE.keys()).index(item['tipo_mat']),
-                    key=item_key+"tipo_mat"
-                )
-            with col3:
-                item['emb'] = st.selectbox(
-                    "Embalagem", options=list(TIPOS_EMBALAGEM_BASE.keys()),
-                    index=list(TIPOS_EMBALAGEM_BASE.keys()).index(item['emb']),
-                    key=item_key+"emb"
+                    "Quantidade", 
+                    min_value=1,
+                    value=item['qtd'],
+                    key=f"qtd_{i}"
                 )
             
-            # Linha 2 - Detalhes adicionais
-            col4, col5 = st.columns(2)
+            with col2:
+                item['tipo_mat'] = st.selectbox(
+                    "Tipo de material",
+                    options=list(TIPOS_MATERIAL_BASE.keys()),
+                    index=list(TIPOS_MATERIAL_BASE.keys()).index(item['tipo_mat']),
+                    key=f"mat_{i}"
+                )
+
+            # Linha 2
+            col3, col4 = st.columns([3, 2])
+            with col3:
+                item['emb'] = st.selectbox(
+                    "Embalagem",
+                    options=list(TIPOS_EMBALAGEM_BASE.keys()),
+                    index=list(TIPOS_EMBALAGEM_BASE.keys()).index(item['emb']),
+                    key=f"emb_{i}"
+                )
+            
             with col4:
                 if item['emb'] in ['pl', 'pa', 'e', 'z']:
                     item['cor_emb'] = st.selectbox(
-                        "Cor da embalagem", 
+                        "Cor",
                         options=[None] + list(CORES_FEMININO_EMBALAGEM.keys()),
-                        format_func=lambda x: "Selecione" if x is None else CORES_FEMININO_EMBALAGEM[x],
                         index=0 if item['cor_emb'] is None else list(CORES_FEMININO_EMBALAGEM.keys()).index(item['cor_emb']) + 1,
-                        key=item_key+"cor_emb"
+                        key=f"cor_{i}"
                     )
                 else:
-                    st.info("Cor não aplicável para este tipo de embalagem")
-            
-            with col5:
-                item['ref'] = st.text_input(
-                    "Referência", value=item['ref'],
-                    key=item_key+"ref"
-                )
-                item['pessoa'] = st.text_input(
-                    "Pessoa relacionada (opcional)", value=item['pessoa'],
-                    key=item_key+"pessoa"
-                )
+                    st.info("Sem cor específica")
 
+            # Linha 3
+            item['ref'] = st.text_input(
+                "Referência do subitem",
+                value=item['ref'],
+                key=f"ref_{i}"
+            )
+
+            item['pessoa'] = st.text_input(
+                "Pessoa relacionada (opcional)",
+                value=item['pessoa'],
+                key=f"pessoa_{i}"
+            )
+            
     st.markdown("---")
 
     # --- Upload de Imagem ---
