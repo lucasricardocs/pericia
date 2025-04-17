@@ -639,9 +639,6 @@ def main():
         unsafe_allow_html=True
     )
 
-Explicação:
-
-
     if 'dados_laudo' not in st.session_state:
         st.session_state.dados_laudo = {
             'rg_pericia': '',
