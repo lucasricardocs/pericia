@@ -1,13 +1,14 @@
-import streamlit as st
-import re
-from datetime import datetime
-import docx
-from docx import Document
-from docx.shared import Pt, Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-import io
-from pytz import timezone
-from PIL import Image
+# --- Interface Streamlit ---
+    import streamlit as st
+    import re
+    from datetime import datetime
+    import docx
+    from docx import Document
+    from docx.shared import Pt, Inches
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    import io
+    from pytz import timezone
+    from PIL import Image
 
     def main():
         st.set_page_config(layout="centered", page_title="Gerador de Laudo")
