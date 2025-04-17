@@ -20,7 +20,7 @@ import traceback
 # ================================================
 # CONSTANTES DE CORES (TEMA ESCURO ATUALIZADO)
 # ================================================
-UI_COR_CINZA_SPTC = "#E0E0E0"  # Cinza claro
+UI_COR_PRINCIPAL = "#E0E0E0"  # Cinza claro
 UI_COR_SECUNDARIA = "#A0A0A0"  # Cinza médio
 COR_FUNDO = "#1E1E1E"          # Fundo escuro
 COR_TEXTO = "#FFFFFF"           # Texto branco
@@ -587,7 +587,7 @@ def main():
 
         /* Títulos */
         h1, h2, h3 {{
-            color: {UI_COR_CINZA_SPTC} !important;
+            color: {UI_COR_PRINCIPAL} !important;
             margin: 0.5rem 0 !important;
         }}
 
@@ -624,7 +624,7 @@ def main():
             mes = meses_portugues.get(now.month, '')
             data_formatada = f"{dia_semana}, {now.day} de {mes} de {now.year}"
             data_placeholder.markdown(f"""
-            <div style="text-align: right; font-size: 0.9em; color: {UI_COR_CINZA_SPTC}; margin-bottom: 15px;">
+            <div style="text-align: right; font-size: 0.9em; color: {UI_COR_PRINCIPAL}; margin-bottom: 15px;">
                 <span>{data_formatada}</span><br>
                 <span style="font-size: 0.8em;">(Goiânia-GO)</span>
             </div>""", unsafe_allow_html=True)
@@ -650,7 +650,7 @@ def main():
 
     with col_titulo:
         st.markdown(f'<h1 style="color: {UI_COR_PRINCIPAL}; margin-top: 0px;">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
-        st.markdown(f'<p style="color: {UI_COR_CINZA_SPTC}; font-size: 1em;">Identificação de Drogas - SPTC/GO</p>', unsafe_allow_html=True)
+        st.markdown(f'<p style="color: {UI_COR_PRINCIPAL}; font-size: 1em;">Identificação de Drogas - SPTC/GO</p>', unsafe_allow_html=True)
 
     if 'dados_laudo' not in st.session_state:
         st.session_state.dados_laudo = {
