@@ -200,7 +200,7 @@ def main():
             })
     st.markdown("---") # Separador visual
             
-   st.markdown("""
+    st.markdown("""
         <style>
         .upload-image-box {
             border: 1px solid #ccc;
