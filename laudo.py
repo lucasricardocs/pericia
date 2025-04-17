@@ -167,12 +167,14 @@ def main():
         run.font.size = Pt(size)
 
     st.subheader("Informações do Laudo")
-    num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
     lacre = st.text_input("Digite o número do lacre da contraprova:")
     numero_laudo = st.text_input("Digite o RG da perícia:")
     uploaded_image = st.file_uploader("Selecione uma imagem do material recebido (opcional):", type=["png", "jpg", "jpeg"])
 
+    
+    st.subheader("MATERIAL RECEBIDO") 
     itens_data = []
+    num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
     for i in range(int(st.session_state.get("num_itens", 1))):
         with st.expander(f"Item {i+1}"):
             col1, col2 = st.columns(2)
