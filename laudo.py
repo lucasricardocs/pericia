@@ -763,7 +763,6 @@ def main():
 
     # --- Loop para exibir campos de cada item ---
     if numero_itens > 0:
-        st.markdown("---")
         for i in range(numero_itens):
             # Usar número do item 1.x na interface
             with st.expander(f"Detalhes do Item 1.{i + 1}", expanded=True):
