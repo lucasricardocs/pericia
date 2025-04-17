@@ -20,7 +20,7 @@ import traceback
 # ================================================
 # CONSTANTES DE CORES (TEMA ESCURO ATUALIZADO)
 # ================================================
-UI_COR_PRINCIPAL = "#E0E0E0"  # Cinza claro
+UI_COR_CINZA_SPTC = "#E0E0E0"  # Cinza claro
 UI_COR_SECUNDARIA = "#A0A0A0"  # Cinza médio
 COR_FUNDO = "#1E1E1E"          # Fundo escuro
 COR_TEXTO = "#FFFFFF"           # Texto branco
