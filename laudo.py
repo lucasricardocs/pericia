@@ -1,4 +1,204 @@
+import streamlit as st
+import re
+from datetime import datetime
+from docx import Document
+from docx.shared import Pt, Inches
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+import io
+from pytz import timezone
+from PIL import Image
 
+def main():
+    st.set_page_config(layout="centered", page_title="Gerador de Laudo")
+
+    # --- Cores UI ---
+    UI_COR_AZUL_SPTC = "#eaeff2"
+    UI_COR_CINZA_SPTC = "#6E6E6E"
+
+    # --- Exibir data ---
+    data_placeholder = st.empty()
+
+    def atualizar_data():
+        try:
+            brasilia_tz = timezone('America/Sao_Paulo')
+            now = datetime.now(brasilia_tz)
+            dias_semana_portugues = [
+                "Segunda-feira", "Terça-feira", "Quarta-feira",
+                "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"
+            ]
+            meses_portugues = [
+                "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
+            ]
+            dia_semana = dias_semana_portugues[now.weekday()]
+            mes = meses_portugues[now.month - 1]
+            data_formatada = f"{dia_semana}, {now.day} de {mes} de {now.year}"
+            data_placeholder.markdown(f"""
+                <div style='text-align: right; font-size: 0.8em; color: {UI_COR_CINZA_SPTC}; margin-bottom: 15px;'>
+                    <span>{data_formatada}</span><br>
+                    <span style='font-size: 0.8em;'>(Goiânia-GO)</span>
+                </div>
+            """, unsafe_allow_html=True)
+        except Exception as e:
+            fallback_str = datetime.now().strftime("%d/%m/%Y")
+            data_placeholder.markdown(f"""
+                <div style='text-align: right; font-size: 0.8em; color: #FF5555; margin-bottom: 15px;'>
+                    <span>{fallback_str} (Local)</span><br>
+                    <span style='font-size: 0.8em;'>Erro Fuso Horário: {e}</span>
+                </div>
+            """, unsafe_allow_html=True)
+
+    atualizar_data()
+
+    # --- Cabeçalho ---
+    col_logo, col_titulo = st.columns([1, 5])
+    with col_logo:
+        logo_path = "logo_policia_cientifica.png"
+        try:
+            st.image(logo_path, width=100)
+        except FileNotFoundError:
+            st.error(f"Erro: Logo '{logo_path}' não encontrado.")
+        except Exception as e:
+            st.warning(f"Logo não carregado: {e}")
+
+    with col_titulo:
+        st.markdown(f"<h1 style='color: {UI_COR_AZUL_SPTC}; margin: 0;'>Gerador de Laudo Pericial</h1>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: {UI_COR_CINZA_SPTC}; font-size: 1em;'>Identificação de Drogas - SPTC/GO</p>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+# ====================
+# Constants
+# ====================
+TIPOS_MATERIAL_BASE = {
+    "v": "vegetal dessecado",
+    "po": "pulverizado",
+    "pd": "petrificado",
+    "r": "resinoso"
+}
+
+TIPOS_EMBALAGEM_BASE = {
+    "e": "microtubo do tipo eppendorf",
+    "z": "embalagem do tipo ziplock",
+    "a": "papel alumínio",
+    "pl": "plástico",
+    "pa": "papel"
+}
+
+        CORES_FEMININO_EMBALAGEM = {
+            "t": "transparente", "b": "branca", "az": "azul", "am": "amarela",
+            "vd": "verde", "vm": "vermelha", "p": "preta", "c": "cinza",
+            "m": "marrom", "r": "rosa", "l": "laranja", "violeta": "violeta", "roxa": "roxa"
+        }
+
+        QUANTIDADES_EXTENSO = {
+            1: "uma", 2: "duas", 3: "três", 4: "quatro", 5: "cinco",
+            6: "seis", 7: "sete", 8: "oito", 9: "nove", 10: "dez"
+        }
+
+        meses_portugues_dict = {
+            "January": "janeiro", "February": "fevereiro", "March": "março",
+            "April": "abril", "May": "maio", "June": "junho", "July": "julho",
+            "August": "agosto", "September": "setembro", "October": "outubro",
+            "November": "novembro", "December": "dezembro"
+        }
+
+        # --- Funções Auxiliares ---
+        def pluralizar_palavra(palavra, quantidade):
+            if quantidade == 1:
+                return palavra
+            if palavra in ["microtubo do tipo eppendorf", "embalagem do tipo ziplock"]:
+                return palavra
+            if palavra.endswith('m'):
+                return re.sub(r'm$', 'ns', palavra)
+            if palavra.endswith('ão'):
+                return re.sub(r'ão$', 'ões', palavra)
+            elif palavra.endswith(('r', 'z')):
+                return palavra + 'es'
+            else:
+                return palavra + 's'
+
+        # Mapeamento de tipo de material para os números dos itens (2.x)
+        material_para_itens = {}
+
+        # Novo mapeamento para rastrear qual número do item está vinculado a qual tipo
+        referencias_itens_por_tipo = {}
+
+        def mapear_material_para_itens(itens):
+            global material_para_itens, referencias_itens_por_tipo
+            material_para_itens = {}
+            referencias_itens_por_tipo = {}
+            for idx, item in enumerate(itens):
+                tipo = item.get('tipo_material')
+                numero_item = f"2.{idx + 1}"
+                if tipo:
+                    if tipo not in material_para_itens:
+                        material_para_itens[tipo] = []
+                    material_para_itens[tipo].append(numero_item)
+                    referencias_itens_por_tipo[numero_item] = tipo
+
+        # Função para obter string de referência ("2.1", "2.2 e 2.3", etc.)
+        def formatar_referencia_material(tipo_codigo):
+            itens = material_para_itens.get(tipo_codigo, [])
+            if not itens:
+                return "[sem referência]"
+            if len(itens) == 1:
+                return itens[0]
+            return " e ".join(itens)
+
+        # Essa estrutura será usada ao construir os tópicos 4, 5 e 6
+        # Ex: formatar_referencia_material("v") → "2.1 e 2.3"
+
+        def obter_quantidade_extenso(qtd):
+            return QUANTIDADES_EXTENSO.get(qtd, str(qtd))
+
+        def add_paragraph(doc, text, bold=False, align='justify', size=12):
+            align_map = {
+                'justify': WD_ALIGN_PARAGRAPH.JUSTIFY,
+                'center': WD_ALIGN_PARAGRAPH.CENTER,
+                'right': WD_ALIGN_PARAGRAPH.RIGHT
+            }
+            p = doc.add_paragraph()
+            p.alignment = align_map.get(align, WD_ALIGN_PARAGRAPH.JUSTIFY)
+            run = p.add_run(text)
+            run.bold = bold
+            run.font.size = Pt(size)
+
+        st.subheader("📝 1. Informações do Laudo")
+        lacre = st.text_input("Digite o número do lacre da contraprova:")
+        numero_laudo = st.text_input("Digite o RG da perícia:")
+        st.markdown("---") # Separador visual
+
+        st.subheader("📦 2. MATERIAL RECEBIDO")
+        itens_data = []
+        num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
+        for i in range(int(st.session_state.get("num_itens", 1))):
+            with st.expander(f"Item {i+1}"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    qtd = st.number_input(f"Quantidade de porções:", min_value=1, step=1, value=1, key=f"qtd_{i}")
+                    tipo_mat_code = st.selectbox(f"Tipo de material (v, po, pd, r):", options=list(TIPOS_MATERIAL_BASE.keys()), key=f"tipo_mat_{i}")
+                    emb_code = st.selectbox(f"Tipo de embalagem (e, z, a, pl, pa):", options=list(TIPOS_EMBALAGEM_BASE.keys()), key=f"emb_{i}")
+                with col2:
+                    ref = st.text_input(f"Referência do subitem:", key=f"ref_{i}")
+                    pessoa = st.text_input(f"Pessoa relacionada (opcional):", key=f"pessoa_{i}")
+                    cor_emb_code = None
+                    if emb_code == 'pl' or emb_code == 'pa':
+                        cor_emb_code = st.selectbox(f"Cor da embalagem:", options=list(CORES_FEMININO_EMBALAGEM.keys()), key=f"cor_emb_{i}")
+                    else:
+                        cor_emb_code = None
+
+                itens_data.append({
+                    'qtd': qtd,
+                    'tipo_mat_code': tipo_mat_code,
+                    'emb_code': emb_code,
+                    'cor_emb_code': cor_emb_code,
+                    'ref': ref,
+                    'pessoa': pessoa
+                })
+
+        st.subheader("📷 3. Upload da Imagem")
+        uploaded_image = st.file_uploader("Selecione uma imagem do material recebido (opcional):", type=["png", "jpg", "jpeg"])
     if st.button("✅ Gerar Laudo"):
         document = Document()
 
