@@ -1,0 +1,4 @@
+streamlit==1.29.0
+python-docx==0.8.11
+pytz==2023.3.post1
+python-dotenv==1.0.0
