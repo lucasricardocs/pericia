@@ -381,6 +381,8 @@ def main():
         )
 
 if __name__ == "__main__":
-    if 'theme' in st.query_params and st.query_params['theme'] in ['light', 'dark']:
+    query_params = st.experimental_get_query_params()
+if 'theme' in query_params and query_params['theme'][0] in ['light', 'dark']:
+    st.session_state.theme = query_params['theme'][0]
         st.session_state.theme = st.query_params['theme']
     main()
