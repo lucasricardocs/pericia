@@ -587,7 +587,7 @@ def main():
 
         /* Títulos */
         h1, h2, h3 {{
-            color: {UI_COR_PRINCIPAL} !important;
+            color: {UI_COR_CINZA_SPTC} !important;
             margin: 0.5rem 0 !important;
         }}
 
