@@ -18,12 +18,12 @@ from docx.oxml.ns import qn
 import traceback
 
 # ================================================
-# CONSTANTES DE CORES (TEMA ESCURO)
+# CONSTANTES DE CORES (TEMA ESCURO ATUALIZADO)
 # ================================================
-UI_COR_AZUL_SPTC = "#2A9FD6"
-UI_COR_CINZA_SPTC = "#CCCCCC"
-COR_FUNDO = "#1E1E1E"
-COR_TEXTO = "#FFFFFF"
+UI_COR_PRINCIPAL = "#E0E0E0"  # Cinza claro
+UI_COR_SECUNDARIA = "#A0A0A0"  # Cinza médio
+COR_FUNDO = "#1E1E1E"          # Fundo escuro
+COR_TEXTO = "#FFFFFF"           # Texto branco
 
 # --- Constantes Originais ---
 TIPOS_MATERIAL_BASE = {
@@ -546,52 +546,74 @@ def main():
         page_icon="🔍"
     )
 
-    # === CSS ATUALIZADO (SEM BORDAS) ===
+    # === CSS ATUALIZADO (ESPAÇAMENTO REDUZIDO) ===
     st.markdown(
         f"""
         <style>
+        /* Estilos Gerais */
         .stApp {{
             background-color: {COR_FUNDO};
             color: {COR_TEXTO};
+            line-height: 1.4;
         }}
 
-        /* Elementos de input limpos */
-        .stTextInput, .stNumberInput, .stSelectbox, .stFileUploader {{
-            background-color: #2E2E2E;
-            color: {COR_TEXTO};
-            border: none !important;
-            border-radius: 4px;
-            padding: 8px;
+        /* Containers Principais */
+        div[data-testid="stVerticalBlock"] > div:not([style*="overflow"]) {{
+            border: 1px solid #404040 !important;
+            border-radius: 8px !important;
+            padding: 1rem !important;
+            margin: 0.5rem 0 !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }}
 
-        /* Títulos simplificados */
-        h1, h2, h3 {{
-            color: {UI_COR_AZUL_SPTC} !important;
-            border-bottom: none !important;
-            margin-bottom: 1rem !important;
-        }}
-
-        /* Espaçamento melhorado */
+        /* Expanders */
         .stExpander {{
-            margin: 1rem 0;
+            border: 1px solid #404040 !important;
+            border-radius: 6px !important;
+            margin: 0.5rem 0 !important;
+        }}
+        .stExpander > div {{
+            padding: 0.5rem 1rem !important;
         }}
 
-        /* Botão principal */
-        .stButton>button {{
-            background-color: {UI_COR_AZUL_SPTC} !important;
-            color: {COR_FUNDO} !important;
-            border: none !important;
-            width: 100%;
-            transition: opacity 0.2s;
+        /* Elementos de Formulário */
+        .stTextInput, .stNumberInput, .stSelectbox {{
+            background-color: #2E2E2E !important;
+            border: 1px solid #404040 !important;
+            border-radius: 4px !important;
+            padding: 6px !important;
+            margin: 0.2rem 0 !important;
         }}
 
-        .stButton>button:hover {{
-            opacity: 0.9;
+        /* Títulos */
+        h1, h2, h3 {{
+            color: {UI_COR_PRINCIPAL} !important;
+            margin: 0.5rem 0 !important;
+        }}
+
+        /* Botões */
+        .stButton > button {{
+            background-color: #404040 !important;
+            color: {COR_TEXTO} !important;
+            border-radius: 5px !important;
+            padding: 0.5rem !important;
+            margin: 0.3rem 0 !important;
+            transition: all 0.2s;
+        }}
+        .stButton > button:hover {{
+            background-color: #505050 !important;
+            transform: none;
+        }}
+
+        /* Grid de Colunas */
+        .stHorizontal {{
+            gap: 0.8rem !important;
         }}
         </style>
         """,
         unsafe_allow_html=True
     )
+
 
     data_placeholder = st.empty()
     def atualizar_data():
@@ -673,31 +695,45 @@ def main():
             })
     elif numero_itens < current_num_itens_in_state:
         st.session_state.dados_laudo['itens'] = st.session_state.dados_laudo['itens'][:numero_itens]
-
-    if numero_itens > 0:
+if numero_itens > 0:
         for i in range(numero_itens):
-            with st.expander(f"Detalhes do Item 1.{i + 1}", expanded=True):
+            with st.expander(f"Item 1.{i + 1}", expanded=True):
                 item_key_prefix = f"item_{i}_"
-                cols_item1 = st.columns([1, 3, 3])
+                cols_item1 = st.columns([1, 3, 3], gap="small")  # Espaço entre colunas reduzido
+                
+                # Coluna 1
                 with cols_item1[0]:
                     st.session_state.dados_laudo['itens'][i]['qtd'] = st.number_input(
-                        f"Qtd (Item 1.{i+1})", min_value=1,
+                        f"Qtd (Item 1.{i+1})", 
+                        min_value=1,
                         value=st.session_state.dados_laudo['itens'][i]['qtd'],
-                        step=1, key=item_key_prefix + "qtd")
+                        step=1, 
+                        key=item_key_prefix + "qtd"
+                    )
+                
+                # Coluna 2
                 with cols_item1[1]:
                     st.session_state.dados_laudo['itens'][i]['tipo_mat'] = st.selectbox(
-                        f"Material (Item 1.{i+1})", options=list(TIPOS_MATERIAL_BASE.keys()),
+                        f"Material (Item 1.{i+1})", 
+                        options=list(TIPOS_MATERIAL_BASE.keys()),
                         format_func=lambda x: f"{x.upper()} ({TIPOS_MATERIAL_BASE.get(x, '?')})",
                         index=list(TIPOS_MATERIAL_BASE.keys()).index(st.session_state.dados_laudo['itens'][i]['tipo_mat']),
-                        key=item_key_prefix + "tipo_mat")
+                        key=item_key_prefix + "tipo_mat"
+                    )
+                
+                # Coluna 3
                 with cols_item1[2]:
                     st.session_state.dados_laudo['itens'][i]['emb'] = st.selectbox(
-                        f"Embalagem (Item 1.{i+1})", options=list(TIPOS_EMBALAGEM_BASE.keys()),
+                        f"Embalagem (Item 1.{i+1})", 
+                        options=list(TIPOS_EMBALAGEM_BASE.keys()),
                         format_func=lambda x: f"{x.upper()} ({TIPOS_EMBALAGEM_BASE.get(x, '?')})",
                         index=list(TIPOS_EMBALAGEM_BASE.keys()).index(st.session_state.dados_laudo['itens'][i]['emb']),
-                        key=item_key_prefix + "emb")
+                        key=item_key_prefix + "emb"
+                    )
 
-                cols_item2 = st.columns([2, 2, 3])
+                cols_item2 = st.columns([2, 2, 3], gap="small")
+                
+                # Subcoluna 1
                 with cols_item2[0]:
                     embalagem_selecionada = st.session_state.dados_laudo['itens'][i]['emb']
                     if embalagem_selecionada in ['pl', 'pa', 'e', 'z']:
@@ -707,20 +743,36 @@ def main():
                         try: cor_index = list(opcoes_cor.keys()).index(current_cor_key)
                         except ValueError: cor_index = 0
                         st.session_state.dados_laudo['itens'][i]['cor_emb'] = st.selectbox(
-                            f"Cor Emb. (Item 1.{i+1})", options=list(opcoes_cor.keys()),
-                            format_func=lambda x: opcoes_cor[x], index=cor_index,
-                            key=item_key_prefix + "cor_emb")
+                            f"Cor Emb. (Item 1.{i+1})", 
+                            options=list(opcoes_cor.keys()),
+                            format_func=lambda x: opcoes_cor[x], 
+                            index=cor_index,
+                            key=item_key_prefix + "cor_emb"
+                        )
                     else:
-                        st.text_input(f"Cor Emb. (Item 1.{i+1})", value="N/A", key=item_key_prefix + "cor_emb_disabled", disabled=True)
+                        st.text_input(
+                            f"Cor Emb. (Item 1.{i+1})", 
+                            value="N/A", 
+                            key=item_key_prefix + "cor_emb_disabled", 
+                            disabled=True
+                        )
                         st.session_state.dados_laudo['itens'][i]['cor_emb'] = None
+                
+                # Subcoluna 2
                 with cols_item2[1]:
                     st.session_state.dados_laudo['itens'][i]['ref'] = st.text_input(
-                        f"Ref. Constatação (Item 1.{i+1})", value=st.session_state.dados_laudo['itens'][i]['ref'],
-                        key=item_key_prefix + "ref")
+                        f"Ref. Constatação (Item 1.{i+1})", 
+                        value=st.session_state.dados_laudo['itens'][i]['ref'],
+                        key=item_key_prefix + "ref"
+                    )
+                
+                # Subcoluna 3
                 with cols_item2[2]:
                     st.session_state.dados_laudo['itens'][i]['pessoa'] = st.text_input(
-                        f"Pessoa Relacionada (Item 1.{i+1})", value=st.session_state.dados_laudo['itens'][i]['pessoa'],
-                        key=item_key_prefix + "pessoa")
+                        f"Pessoa Relacionada (Item 1.{i+1})", 
+                        value=st.session_state.dados_laudo['itens'][i]['pessoa'],
+                        key=item_key_prefix + "pessoa"
+                    )
 
     st.header("Upload da Imagem")
     uploaded_image = st.file_uploader(
