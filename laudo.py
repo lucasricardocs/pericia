@@ -166,13 +166,13 @@ def main():
         run.bold = bold
         run.font.size = Pt(size)
 
-    st.subheader("Informações do Laudo")
+    st.subheader("1. Informações do Laudo")
     lacre = st.text_input("Digite o número do lacre da contraprova:")
     numero_laudo = st.text_input("Digite o RG da perícia:")
-    uploaded_image = st.file_uploader("Selecione uma imagem do material recebido (opcional):", type=["png", "jpg", "jpeg"])
+    st.markdown("---") # Separador visual
 
     
-    st.subheader("MATERIAL RECEBIDO") 
+    st.subheader("2. MATERIAL RECEBIDO") 
     itens_data = []
     num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
     for i in range(int(st.session_state.get("num_itens", 1))):
@@ -199,7 +199,11 @@ def main():
                 'ref': ref,
                 'pessoa': pessoa
             })
-
+            
+    st.subheader("3. Upload da Imagem")
+    uploaded_image = st.file_uploader("Selecione uma imagem do material recebido:", type=["png", "jpg", "jpeg"])            
+    st.markdown("---") # Separador visual
+   
     if st.button("Gerar Laudo"):
         document = Document()
 
