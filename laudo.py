@@ -478,29 +478,7 @@ def adicionar_encerramento_assinatura(doc):
     data_formatada = f"Goiânia, {hoje.day} de {mes_atual} de {hoje.year}."
     doc.add_paragraph()
     adicionar_paragrafo(doc, data_formatada, align='right', style='Normal')
-    doc.add_paragraph();
-    doc.add_if full_text[idx:].startswith(phrase):
-                # Verifica se é uma palavra completa (simplificado)
-                ends_correctly = (idx + len(phrase) == len(full_text)) or (not full_text[idx + len(phrase)].isalnum())
-                starts_correctly = (idx == 0) or (not full_text[idx-1].isalnum())
-                if ends_correctly and starts_correctly:
-                    run = paragraph.add_run(phrase)
-                    run.font.name = 'Gadugi'
-                    run.font.size = tamanho_fonte
-                    run.italic = True # Aplica itálico
-                    idx += len(phrase)
-                    match_found = True
-                    break  # Sai do loop de termos e continua varrendo o texto
-            # Se nenhum termo em itálico foi encontrado começando em 'idx'
-            if not match_found:
-                run = paragraph.add_run(full_text[idx])
-                run.font.name = 'Gadugi'
-                run.font.size = tamanho_fonte
-                run.italic = False # Garante que não seja itálico por padrão
-                idx += 1
-    # Se o parágrafo ficou vazio após o processo (pouco provável), restaura o texto original
-    if not paragraph.text and full_text:
-        paragraph.text = full_text
+    doc.add_paragraph()
 
 # --- Função Principal de Geração do DOCX ---
 
