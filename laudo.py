@@ -200,9 +200,9 @@ def main():
             })
     st.markdown("---") # Separador visual
             
-    st.markdown("""
+   st.markdown("""
         <style>
-        .stContainer {
+        .upload-image-box {
             border: 1px solid #ccc;
             border-radius: 10px;
             box-shadow: 2px 2px 5px #888888;
@@ -213,9 +213,12 @@ def main():
         </style>
     """, unsafe_allow_html=True)
 
-    with st.container():
-        st.subheader("3. Upload da Imagem")
-        uploaded_image = st.file_uploader("Selecione uma imagem do material recebido:", type=["png", "jpg", "jpeg"])
+    st.markdown("""
+        <div class="upload-image-box">
+            <h3>3. Upload da Imagem</h3>
+            <input type="file" accept="image/png, image/jpeg" style="width: 100%;">
+        </div>
+    """, unsafe_allow_html=True)
    
     if st.button("Gerar Laudo"):
         document = Document()
