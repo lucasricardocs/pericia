@@ -697,7 +697,7 @@ def main():
     with col_titulo: # Coluna do Título
         # Adicionado margin para tentar alinhar melhor com logo menor
         st.markdown(f'<h1 style="color: {UI_COR_AZUL_SPTC}; margin-top: 0px; margin-bottom: 0px;">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
-        st.markdown(f'<p style="color: {UI_COR_CINZA_SPTC}; font-size: 0.9em;">Identificação de Drogas - SPTC/GO (Versão Combinada)</p>', unsafe_allow_html=True)
+        st.markdown(f'<p style="color: {UI_COR_CINZA_SPTC}; font-size: 1em;">Identificação de Drogas - SPTC/GO</p>', unsafe_allow_html=True)
 
     st.markdown("---") # Separador visual
 
