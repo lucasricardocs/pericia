@@ -548,72 +548,65 @@ def main():
 
     # === CSS ATUALIZADO (ESPAÇAMENTO REDUZIDO) ===
     st.markdown(
-        f"""
-        <style>
-        /* Estilos Gerais */
-        .stApp {{
-            background-color: {COR_FUNDO};
-            color: {COR_TEXTO};
-            line-height: 1.4;
-        }}
+    f"""
+    <style>
+    /* Estilos Gerais */
+    .stApp {{
+        background-color: {COR_FUNDO};
+        color: {COR_TEXTO};
+        line-height: 1.4;
+    }}
 
-        /* Containers Principais */
-        div[data-testid="stVerticalBlock"] > div:not([style*="overflow"]) {{
-            border: 1px solid #404040 !important;
-            border-radius: 8px !important;
-            padding: 1rem !important;
-            margin: 0.5rem 0 !important;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-        }}
+    /* Removido: Containers com bordas */
+    div[data-testid="stVerticalBlock"] > div:not([style*="overflow"]) {{
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0.5rem !important;
+        margin: 0.2rem 0 !important;
+    }}
 
-        /* Expanders */
-        .stExpander {{
-            border: 1px solid #404040 !important;
-            border-radius: 6px !important;
-            margin: 0.5rem 0 !important;
-        }}
-        .stExpander > div {{
-            padding: 0.5rem 1rem !important;
-        }}
+    /* Expanders Simplificados */
+    .stExpander {{
+        border: none !important;
+        margin: 0.2rem 0 !important;
+    }}
+    .stExpander > div {{
+        padding: 0.2rem !important;
+    }}
 
-        /* Elementos de Formulário */
-        .stTextInput, .stNumberInput, .stSelectbox {{
-            background-color: #2E2E2E !important;
-            border: 1px solid #404040 !important;
-            border-radius: 4px !important;
-            padding: 6px !important;
-            margin: 0.2rem 0 !important;
-        }}
+    /* Elementos de Formulário Minimalistas */
+    .stTextInput, .stNumberInput, .stSelectbox {{
+        background-color: #2E2E2E !important;
+        border: 1px solid #505050 !important;
+        border-radius: 4px !important;
+        padding: 8px !important;
+        margin: 0.2rem 0 !important;
+    }}
 
-        /* Títulos */
-        h1, h2, h3 {{
-            color: {UI_COR_PRINCIPAL} !important;
-            margin: 0.5rem 0 !important;
-        }}
+    /* Títulos Limpos */
+    h1, h2, h3 {{
+        color: {UI_COR_PRINCIPAL} !important;
+        margin: 0.8rem 0 0.3rem !important;
+    }}
 
-        /* Botões */
-        .stButton > button {{
-            background-color: #404040 !important;
-            color: {COR_TEXTO} !important;
-            border-radius: 5px !important;
-            padding: 0.5rem !important;
-            margin: 0.3rem 0 !important;
-            transition: all 0.2s;
-        }}
-        .stButton > button:hover {{
-            background-color: #505050 !important;
-            transform: none;
-        }}
+    /* Botões Discretos */
+    .stButton > button {{
+        background-color: #404040 !important;
+        color: {COR_TEXTO} !important;
+        border-radius: 4px !important;
+        padding: 0.5rem !important;
+        margin: 0.5rem 0 !important;
+        border: none !important;
+    }}
 
-        /* Grid de Colunas */
-        .stHorizontal {{
-            gap: 0.8rem !important;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
+    /* Layout de Colunas Ajustado */
+    .stHorizontal {{
+        gap: 0.5rem !important;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
     data_placeholder = st.empty()
     def atualizar_data():
