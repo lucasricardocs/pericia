@@ -203,10 +203,10 @@ def main():
     st.markdown("""
         <style>
         .upload-image-box {
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            box-shadow: 2px 2px 5px #888888;
-            padding: 15px;
+            border: none; /* Sem borda */
+            border-radius: 8px;
+            box-shadow: 1px 1px 2px #eee; /* Sombra ainda mais suave */
+            padding: 8px;
             margin-top: 10px;
             margin-bottom: 10px;
         }
