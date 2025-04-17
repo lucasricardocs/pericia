@@ -67,7 +67,7 @@ DOCX_COR_CINZA_SPTC = RGBColor(110, 110, 110)
 DOCX_COR_PRETO = RGBColor(0, 0, 0)
 
 TERMOS_ITALICO_ORIGINAL = [
-    'Cannabis sativa L.', 
+    'Cannabis sativa L.',
     'Cannabis sativa',
     'Scientific Working Group for the Analysis of Seized Drugs',
     'United Nations Office on Drugs and Crime',
@@ -412,8 +412,8 @@ def adicionar_conclusao(doc, subitens_cannabis, subitens_cocaina, dados_laudo):
         refs_str = " e ".join(itens_referencia)
         label = f"no item {refs_str}" if len(itens_referencia) == 1 else f"nos itens {refs_str}"
         conclusoes.append(f"no(s) material(is) descrito(s) {label}, foi detectada a presença de partes "
-                           f"da planta Cannabis sativa L., vulgarmente conhecida por maconha. "
-                           f"A Cannabis sativa L. contém princípios ativos chamados canabinóis, dentre os quais se encontra o tetrahidrocanabinol, substância perturbadora do sistema nervoso central. "
+                           f"da planta Cannabis sativa L., vulgarmente conhecida por maconha.\n"
+                           f"A Cannabis sativa L. contém princípios ativos chamados canabinóis, dentre os quais se encontra o tetrahidrocanabinol, substância perturbadora do sistema nervoso central.\n"
                            f"Tanto a Cannabis sativa L. quanto a tetrahidrocanabinol são proscritas no país, com fulcro na Portaria nº 344/1998, atualizada por meio da RDC nº 970, de 19/03/2025, da Anvisa.")
     if subitens_cocaina:
         itens_referencia = sorted(list(subitens_cocaina.values()))
@@ -443,8 +443,10 @@ def adicionar_referencias(doc, subitens_cannabis, subitens_cocaina):
     tamanho_ref = 10
 
     referencias_base = [
-        "BRASIL. Ministério da Saúde. Portaria SVS/MS n° 344, de 12 de maio de 1998. Aprova o regulamento técnico sobre substâncias e medicamentos sujeitos a controle especial. Diário Oficial da União: Brasília, DF, p. 37, 19 maio 1998. Alterada pela RDC nº 970, de 19/03/2025.",
-        "GOIÁS. Secretaria de Estado da Segurança Pública. Portaria nº 0003/2019/SSP de 10 de janeiro de 2019. Regulamenta a apreensão, movimentação, exames, acondicionamento, armazenamento e destruição de drogas no âmbito da Secretaria de Estado da Segurança Pública. Diário Oficial do Estado de Goiás: n° 22.972, Goiânia, GO, p. 4-5, 15 jan. 2019.",
+        "BRASIL. Ministério da Saúde. Portaria SVS/MS n° 344, de 12 de maio de 1998. Aprova o regulamento técnico sobre substâncias e medicamentos sujeitos a controle especial.\n"
+        "Diário Oficial da União: Brasília, DF, p. 37, 19 maio 1998. Alterada pela RDC nº 970, de 19/03/2025.",
+        "GOIÁS. Secretaria de Estado da Segurança Pública. Portaria nº 0003/2019/SSP de 10 de janeiro de 2019. Regulamenta a apreensão, movimentação, exames, acondicionamento, armazenamento e destruição de drogas no âmbito da Secretaria de Estado da Segurança Pública.\n"
+        "Diário Oficial do Estado de Goiás: n° 22.972, Goiânia, GO, p. 4-5, 15 jan. 2019.",
         "SWGDRUG: Scientific Working Group for the Analysis of Seized Drugs. Recommendations. Version 8.0 june. 2019. Disponível em: http://www.swgdrug.org/Documents/SWGDRUG%20Recommendations%20Version%208_FINAL_ForPosting_092919.pdf. Acesso em: 07/10/2019."
     ]
 
@@ -506,18 +508,88 @@ def aplicar_italico_fonte_original(doc):
                         run.font.size = tamanho_fonte
                         run.italic = True
                         idx += len(phrase)
-                        match_found = True
-                        break
-
-            if not match_found:
+                    else:
+                        run = paragraph.add_run(full_text[idx])
+                        run.font.name = 'Gadugi'
+                        run.font.size = tamanho_fonte
+                        idx += 1
+            else:
                 run = paragraph.add_run(full_text[idx])
                 run.font.name = 'Gadugi'
                 run.font.size = tamanho_fonte
-                run.italic = False
                 idx += 1
 
-        if not paragraph.text and full_text:
-             paragraph.text = full_text
+# --- Funções do Streamlit ---
+def aplicar_estilo_tema_escuro():
+    st.markdown(f"""
+        <style>
+            .reportview-container .main {{
+                background-color: {COR_FUNDO};
+                color: {COR_TEXTO};
+            }}
+            .stTextInput > div > div > input {{
+                background-color: {COR_FUNDO};
+                color: {COR_TEXTO};
+            }}
+            .stTextArea > div > div > textarea {{
+                background-color: {COR_FUNDO};
+                color: {COR_TEXTO};
+            }}
+            .stNumberInput > div > div > input {{
+                background-color: {COR_FUNDO};
+                color: {COR_TEXTO};
+            }}
+            .stselectbox > div > div > div > input {{
+                background-color: {COR_FUNDO};
+                color: {COR_TEXTO};
+            }}
+            .stFileUploader label {{
+                background-color: {UI_COR_PRINCIPAL};
+                color: {COR_FUNDO};
+            }}
+            .stButton > button {{
+                background-color: {UI_COR_PRINCIPAL};
+                color: {COR_FUNDO};
+            }}
+            .stButton > button:hover {{
+                background-color: {UI_COR_SECUNDARIA};
+            }}
+            .sidebar .sidebar-content {{
+                background-color: {COR_FUNDO};
+                color: {COR_TEXTO};
+            }}
+            h1, h2, h3, h4, h5, h6 {{
+                color: {UI_COR_PRINCIPAL};
+            }}
+            label {{
+                color: {UI_COR_PRINCIPAL};
+            }}
+            .stSuccess {{
+                background-color: #4CAF50;
+                color: white;
+            }}
+            .stWarning {{
+                background-color: #FF9800;
+                color: white;
+            }}
+            .stError {{
+                background-color: #F44336;
+                color: white;
+            }}
+        </style>
+    """, unsafe_allow_html=True)
+
+def entrada_texto(label, key, ajuda=None):
+    return st.text_input(label, key=key, help=ajuda)
+
+def entrada_numero(label, key, min_value=1, max_value=100, value=1, ajuda=None):
+    return st.number_input(label, min_value=min_value, max_value=max_value, value=value, key=key, help=ajuda)
+
+def entrada_selecao(label, opcoes, key, ajuda=None):
+    return st.selectbox(label, options=opcoes, key=key, help=ajuda)
+
+def entrada_arquivo(label, tipos, key, ajuda=None):
+    return st.file_uploader(label, type=tipos, key=key, help=ajuda)
 
 def gerar_laudo_docx(dados_laudo):
     document = Document()
@@ -533,244 +605,42 @@ def gerar_laudo_docx(dados_laudo):
     adicionar_custodia_material(document, dados_laudo)
     adicionar_referencias(document, subitens_cannabis, subitens_cocaina)
     adicionar_encerramento_assinatura(document)
-
     aplicar_italico_fonte_original(document)
 
     return document
 
-# --- Interface Streamlit ---
 def main():
-    st.set_page_config(
-        layout="centered", 
-        page_title="Gerador de Laudo",
-        page_icon="🔍"
-    )
-
-    # === CSS ATUALIZADO (ESPAÇAMENTO REDUZIDO) ===
-    st.markdown(
-    f"""
-    <style>
-    /* Estilos Gerais */
-    .stApp {{
-        background-color: {COR_FUNDO};
-        color: {COR_TEXTO};
-        line-height: 1.4;
-    }}
-
-    /* Removido: Containers com bordas */
-    div[data-testid="stVerticalBlock"] > div:not([style*="overflow"]) {{
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0.5rem !important;
-        margin: 0.2rem 0 !important;
-    }}
-
-    /* Expanders Simplificados */
-    .stExpander {{
-        border: none !important;
-        margin: 0.2rem 0 !important;
-    }}
-    .stExpander > div {{
-        padding: 0.2rem !important;
-    }}
-
-    /* Elementos de Formulário Minimalistas */
-    .stTextInput, .stNumberInput, .stSelectbox {{
-        background-color: #2E2E2E !important;
-        border: 1px solid #505050 !important;
-        border-radius: 4px !important;
-        padding: 8px !important;
-        margin: 0.2rem 0 !important;
-    }}
-
-    /* Títulos Limpos */
-    h1, h2, h3 {{
-        color: {UI_COR_PRINCIPAL} !important;
-        margin: 0.8rem 0 0.3rem !important;
-    }}
-
-    /* Botões Discretos */
-    .stButton > button {{
-        background-color: #404040 !important;
-        color: {COR_TEXTO} !important;
-        border-radius: 4px !important;
-        padding: 0.5rem !important;
-        margin: 0.5rem 0 !important;
-        border: none !important;
-    }}
-
-    /* Layout de Colunas Ajustado */
-    .stHorizontal {{
-        gap: 0.5rem !important;
-    }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-    data_placeholder = st.empty()
-    def atualizar_data():
-        try:
-            brasilia_tz = pytz.timezone('America/Sao_Paulo')
-            now = datetime.now(brasilia_tz)
-            dia_semana = dias_semana_portugues.get(now.weekday(), '')
-            mes = meses_portugues.get(now.month, '')
-            data_formatada = f"{dia_semana}, {now.day} de {mes} de {now.year}"
-            data_placeholder.markdown(f"""
-            <div style="text-align: right; font-size: 0.9em; color: {UI_COR_PRINCIPAL}; margin-bottom: 15px;">
-                <span>{data_formatada}</span><br>
-                <span style="font-size: 0.8em;">(Goiânia-GO)</span>
-            </div>""", unsafe_allow_html=True)
-        except Exception as e:
-            now = datetime.now()
-            fallback_str = now.strftime("%d/%m/%Y")
-            data_placeholder.markdown(f"""
-            <div style="text-align: right; font-size: 0.9em; color: #FF5555; margin-bottom: 15px;">
-                <span>{fallback_str} (Local)</span><br>
-                <span style="font-size: 0.8em;">Erro Fuso Horário: {e}</span>
-            </div>""", unsafe_allow_html=True)
-    atualizar_data()
-
-    col_logo, col_titulo = st.columns([1, 5])
-    with col_logo:
-        logo_path = "logo_policia_cientifica.png"
-        try:
-            st.image(logo_path, width=100)
-        except FileNotFoundError:
-            st.error(f"Erro: Logo '{logo_path}' não encontrado.")
-        except Exception as e:
-            st.warning(f"Logo não carregado: {e}")
-
-    with col_titulo:
-        st.markdown(f'<h1 style="color: {UI_COR_PRINCIPAL}; margin-top: 0px;">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
-        st.markdown(f'<p style="color: {UI_COR_PRINCIPAL}; font-size: 1em;">Identificação de Drogas - SPTC/GO</p>', unsafe_allow_html=True)
+    st.set_page_config(page_title="Gerador de Laudo PCGO", page_icon="🧪")
+    aplicar_estilo_tema_escuro()
 
     if 'dados_laudo' not in st.session_state:
-        st.session_state.dados_laudo = {
-            'rg_pericia': '',
-            'lacre': '',
-            'itens': [],
-            'imagem': None
-        }
+        st.session_state.dados_laudo = {'itens': []}
 
-    st.header("Informações Gerais")
-    col_geral1, col_geral2 = st.columns(2)
-    with col_geral1:
-        st.session_state.dados_laudo['rg_pericia'] = st.text_input(
-            "RG da Perícia (para nome do arquivo)",
-            value=st.session_state.dados_laudo['rg_pericia'],
-            key="rg_pericia_input"
-        )
-    with col_geral2:
-        st.session_state.dados_laudo['lacre'] = st.text_input(
-            "Número do Lacre da Contraprova",
-            value=st.session_state.dados_laudo['lacre'],
-            key="lacre_input"
-        )
+    st.title("Gerador de Laudo Pericial")
 
+    with st.expander("Informações do Laudo", expanded=True):
+        st.subheader("Dados Gerais")
+        st.session_state.dados_laudo['rg_pericia'] = entrada_texto("RG da Perícia:", "rg_pericia")
+        st.session_state.dados_laudo['numero_laudo_constatacao'] = entrada_texto("Número do Laudo de Constatação:", "numero_laudo_constatacao")
+        st.session_state.dados_laudo['lacre'] = entrada_texto("Número do Lacre:", "lacre")
 
-    st.header("1 MATERIAL RECEBIDO PARA EXAME")
-    numero_itens = st.number_input(
-        "Número de tipos diferentes de material/acondicionamento a descrever",
-        min_value=0,
-        value=max(0, len(st.session_state.dados_laudo.get('itens', []))),
-        step=1,
-        key="num_itens_input"
-    )
+        st.subheader("Material(is) Recebido(s)")
+        if st.button("➕ Adicionar Item"):
+            st.session_state.dados_laudo['itens'].append({})
 
-    current_num_itens_in_state = len(st.session_state.dados_laudo['itens'])
-    if numero_itens > current_num_itens_in_state:
-        for _ in range(numero_itens - current_num_itens_in_state):
-            st.session_state.dados_laudo['itens'].append({
-                'qtd': 1, 'tipo_mat': list(TIPOS_MATERIAL_BASE.keys())[0],
-                'emb': list(TIPOS_EMBALAGEM_BASE.keys())[0], 'cor_emb': None,
-                'ref': '', 'pessoa': ''
-            })
-    elif numero_itens < current_num_itens_in_state:
-        st.session_state.dados_laudo['itens'] = st.session_state.dados_laudo['itens'][:numero_itens]
-    if numero_itens > 0:
-        for i in range(numero_itens):
-            with st.expander(f"Item 1.{i + 1}", expanded=True):
-                item_key_prefix = f"item_{i}_"
-                cols_item1 = st.columns([1, 3, 3], gap="small")  # Espaço entre colunas reduzido
-                
-                # Coluna 1
-                with cols_item1[0]:
-                    st.session_state.dados_laudo['itens'][i]['qtd'] = st.number_input(
-                        f"Qtd (Item 1.{i+1})", 
-                        min_value=1,
-                        value=st.session_state.dados_laudo['itens'][i]['qtd'],
-                        step=1, 
-                        key=item_key_prefix + "qtd"
-                    )
-                
-                # Coluna 2
-                with cols_item1[1]:
-                    st.session_state.dados_laudo['itens'][i]['tipo_mat'] = st.selectbox(
-                        f"Material (Item 1.{i+1})", 
-                        options=list(TIPOS_MATERIAL_BASE.keys()),
-                        format_func=lambda x: f"{x.upper()} ({TIPOS_MATERIAL_BASE.get(x, '?')})",
-                        index=list(TIPOS_MATERIAL_BASE.keys()).index(st.session_state.dados_laudo['itens'][i]['tipo_mat']),
-                        key=item_key_prefix + "tipo_mat"
-                    )
-                
-                # Coluna 3
-                with cols_item1[2]:
-                    st.session_state.dados_laudo['itens'][i]['emb'] = st.selectbox(
-                        f"Embalagem (Item 1.{i+1})", 
-                        options=list(TIPOS_EMBALAGEM_BASE.keys()),
-                        format_func=lambda x: f"{x.upper()} ({TIPOS_EMBALAGEM_BASE.get(x, '?')})",
-                        index=list(TIPOS_EMBALAGEM_BASE.keys()).index(st.session_state.dados_laudo['itens'][i]['emb']),
-                        key=item_key_prefix + "emb"
-                    )
+        for i, item in enumerate(st.session_state.dados_laudo['itens']):
+            st.markdown(f"--- Item {i + 1} ---")
+            col1, col2 = st.columns(2)
+            item['qtd'] = col1.number_input("Quantidade:", min_value=1, max_value=100, value=1, key=f"qtd_{i}")
+            item['tipo_mat'] = col2.selectbox("Tipo de Material:", options=TIPOS_MATERIAL_BASE.keys(), key=f"tipo_mat_{i}")
+            item['emb'] = entrada_selecao("Tipo de Embalagem:", TIPOS_EMBALAGEM_BASE.keys(), f"emb_{i}")
+            if item['emb'] in ['pl', 'pa', 'e', 'z']:
+                item['cor_emb'] = entrada_selecao("Cor da Embalagem:", CORES_FEMININO_EMBALAGEM.keys(), f"cor_emb_{i}")
+            item['pessoa'] = entrada_texto("Pessoa (opcional):", f"pessoa_{i}")
+            item['ref'] = entrada_texto("Referência (opcional):", f"ref_{i}")
 
-                cols_item2 = st.columns([2, 2, 3], gap="small")
-                
-                # Subcoluna 1
-                with cols_item2[0]:
-                    embalagem_selecionada = st.session_state.dados_laudo['itens'][i]['emb']
-                    if embalagem_selecionada in ['pl', 'pa', 'e', 'z']:
-                        opcoes_cor = {None: " - Selecione - "}
-                        opcoes_cor.update({k: v.capitalize() for k, v in CORES_FEMININO_EMBALAGEM.items()})
-                        current_cor_key = st.session_state.dados_laudo['itens'][i]['cor_emb']
-                        try: cor_index = list(opcoes_cor.keys()).index(current_cor_key)
-                        except ValueError: cor_index = 0
-                        st.session_state.dados_laudo['itens'][i]['cor_emb'] = st.selectbox(
-                            f"Cor Emb. (Item 1.{i+1})", 
-                            options=list(opcoes_cor.keys()),
-                            format_func=lambda x: opcoes_cor[x], 
-                            index=cor_index,
-                            key=item_key_prefix + "cor_emb"
-                        )
-                    else:
-                        st.text_input(
-                            f"Cor Emb. (Item 1.{i+1})", 
-                            value="N/A", 
-                            key=item_key_prefix + "cor_emb_disabled", 
-                            disabled=True
-                        )
-                        st.session_state.dados_laudo['itens'][i]['cor_emb'] = None
-                
-                # Subcoluna 2
-                with cols_item2[1]:
-                    st.session_state.dados_laudo['itens'][i]['ref'] = st.text_input(
-                        f"Ref. Constatação (Item 1.{i+1})", 
-                        value=st.session_state.dados_laudo['itens'][i]['ref'],
-                        key=item_key_prefix + "ref"
-                    )
-                
-                # Subcoluna 3
-                with cols_item2[2]:
-                    st.session_state.dados_laudo['itens'][i]['pessoa'] = st.text_input(
-                        f"Pessoa Relacionada (Item 1.{i+1})", 
-                        value=st.session_state.dados_laudo['itens'][i]['pessoa'],
-                        key=item_key_prefix + "pessoa"
-                    )
-
-    # IMPORTANTE: Esta linha precisa estar alinhada à esquerda fora do bloco do for/expand
-    st.header("Upload da Imagem")
-    uploaded_image = st.file_uploader(
-        "Carregar imagem dos materiais recebidos",
+    uploaded_image = entrada_arquivo(
+        "Carregar Imagem do(s) material(is) recebido(s)",
         type=["png", "jpg", "jpeg", "bmp", "gif"],
         key="image_uploader"
     )
@@ -802,8 +672,8 @@ def main():
                     )
                     st.success("Laudo gerado com sucesso!")
                 except Exception as e:
-                    st.error(f"❌ Erro ao gerar o laudo:")
-                    st.exception(e)
+                    st.error(f"❌ Erro ao gerar o laudo: {e}")
+                    traceback.print_exc()
 
 if __name__ == "__main__":
     main()
