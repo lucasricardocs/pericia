@@ -614,7 +614,6 @@ def main():
         st.markdown(f'<h1 style="color: {UI_COR_AZUL_SPTC}; margin-top: 0px;">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
         st.markdown(f'<p style="color: {UI_COR_CINZA_SPTC}; font-size: 1em;">Identificação de Drogas - SPTC/GO</p>', unsafe_allow_html=True)
 
-    st.markdown("---")
 
     if 'dados_laudo' not in st.session_state:
         st.session_state.dados_laudo = {
@@ -639,7 +638,6 @@ def main():
             key="lacre_input"
         )
 
-    st.markdown("---")
 
     st.header("1 MATERIAL RECEBIDO PARA EXAME")
     numero_itens = st.number_input(
@@ -662,7 +660,6 @@ def main():
         st.session_state.dados_laudo['itens'] = st.session_state.dados_laudo['itens'][:numero_itens]
 
     if numero_itens > 0:
-        st.markdown("---")
         for i in range(numero_itens):
             with st.expander(f"Detalhes do Item 1.{i + 1}", expanded=True):
                 item_key_prefix = f"item_{i}_"
@@ -709,13 +706,10 @@ def main():
                     st.session_state.dados_laudo['itens'][i]['pessoa'] = st.text_input(
                         f"Pessoa Relacionada (Item 1.{i+1})", value=st.session_state.dados_laudo['itens'][i]['pessoa'],
                         key=item_key_prefix + "pessoa")
-                st.markdown("---")
 
-    st.markdown("---")
-
-    st.header("Ilustração (Opcional)")
+    st.header("Upload da Imagem")
     uploaded_image = st.file_uploader(
-        "Carregar imagem do(s) material(is) recebido(s)",
+        "Carregar imagem dos materiais recebidos",
         type=["png", "jpg", "jpeg", "bmp", "gif"],
         key="image_uploader"
     )
@@ -724,7 +718,6 @@ def main():
     elif 'image_uploader' in st.session_state and st.session_state.image_uploader is None:
          st.session_state.dados_laudo['imagem'] = None
 
-    st.markdown("---")
     st.header("Gerar e Baixar Laudo")
 
     if st.button("📊 Gerar Laudo (.docx)"):
