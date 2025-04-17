@@ -235,9 +235,9 @@ def main():
     st.markdown("""
         <style>
         .upload-image-box {
-            border: none; /* Sem borda */
+            border: 0.2px; /* Sem borda */
             border-radius: 8px;
-            box-shadow: 1px 1px 1px #eee; /* Sombra ainda mais suave */
+            box-shadow: none; /* Sombra ainda mais suave */
             padding: 8px;
             margin-top: 10px;
             margin-bottom: 10px;
