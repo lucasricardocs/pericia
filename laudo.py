@@ -741,102 +741,76 @@ def main():
     st.header("1 MATERIAL RECEBIDO PARA EXAME")
 
     numero_itens = st.number_input(
-        "Número de tipos diferentes de material/acondicionamento a descrever",
+        "Número de tipos diferentes de material/acondicionamento",
         min_value=0,
         value=max(0, len(st.session_state.dados_laudo.get('itens', []))),
         step=1,
         key="num_itens_input",
-        help="Informe quantos grupos distintos de material você recebeu."
+        help="Quantos grupos distintos de material você recebeu?"
     )
 
-    # --- Lógica para adicionar/remover itens no estado da sessão ---
-    current_num_itens_in_state = len(st.session_state.dados_laudo['itens'])
-    if numero_itens > current_num_itens_in_state:
-        for _ in range(numero_itens - current_num_itens_in_state):
+    # Lógica de atualização do estado (mantida igual)
+    current_num_itens = len(st.session_state.dados_laudo['itens'])
+    if numero_itens > current_num_itens:
+        for _ in range(numero_itens - current_num_itens):
             st.session_state.dados_laudo['itens'].append({
                 'qtd': 1, 'tipo_mat': list(TIPOS_MATERIAL_BASE.keys())[0],
                 'emb': list(TIPOS_EMBALAGEM_BASE.keys())[0], 'cor_emb': None,
                 'ref': '', 'pessoa': ''
             })
-    elif numero_itens < current_num_itens_in_state:
-        st.session_state.dados_laudo['itens'] = st.session_state.dados_laudo['itens'][:numero_itens]
+    elif numero_itens < current_num_itens:
+            st.session_state.dados_laudo['itens'] = st.session_state.dados_laudo['itens'][:numero_itens]
 
-    # --- Loop para exibir campos de cada item ---
+# Exibição simplificada dos itens
     if numero_itens > 0:
         for i in range(numero_itens):
-            # Usar número do item 1.x na interface
-            with st.expander(f"Detalhes do Item 1.{i + 1}", expanded=True):
-                item_key_prefix = f"item_{i}_" # Chave única para widgets Streamlit
-                cols_item1 = st.columns([1, 3, 3])
-                with cols_item1[0]:
-                    # Garante que qtd é int antes de usar no widget
-                    if not isinstance(st.session_state.dados_laudo['itens'][i].get('qtd'), int):
-                        st.session_state.dados_laudo['itens'][i]['qtd'] = 1
-                    st.session_state.dados_laudo['itens'][i]['qtd'] = st.number_input(
-                        f"Qtd (Item 1.{i+1})", min_value=1,
-                        value=st.session_state.dados_laudo['itens'][i]['qtd'],
-                        step=1, key=item_key_prefix + "qtd",
-                        help="Número de unidades deste item (ex: 5 eppendorfs)")
-                with cols_item1[1]:
-                    # Garante que tipo_mat existe e é válido
-                    if st.session_state.dados_laudo['itens'][i].get('tipo_mat') not in TIPOS_MATERIAL_BASE:
-                         st.session_state.dados_laudo['itens'][i]['tipo_mat'] = list(TIPOS_MATERIAL_BASE.keys())[0]
-                    st.session_state.dados_laudo['itens'][i]['tipo_mat'] = st.selectbox(
-                        f"Material (Item 1.{i+1})", options=list(TIPOS_MATERIAL_BASE.keys()),
-                        format_func=lambda x: f"{x.upper()} ({TIPOS_MATERIAL_BASE.get(x, '?')})",
-                        index=list(TIPOS_MATERIAL_BASE.keys()).index(st.session_state.dados_laudo['itens'][i]['tipo_mat']),
-                        key=item_key_prefix + "tipo_mat",
-                        help="Selecione o aspecto principal do material.")
-                with cols_item1[2]:
-                     # Garante que emb existe e é válido
-                    if st.session_state.dados_laudo['itens'][i].get('emb') not in TIPOS_EMBALAGEM_BASE:
-                         st.session_state.dados_laudo['itens'][i]['emb'] = list(TIPOS_EMBALAGEM_BASE.keys())[0]
-                    st.session_state.dados_laudo['itens'][i]['emb'] = st.selectbox(
-                        f"Embalagem (Item 1.{i+1})", options=list(TIPOS_EMBALAGEM_BASE.keys()),
-                        format_func=lambda x: f"{x.upper()} ({TIPOS_EMBALAGEM_BASE.get(x, '?')})",
-                        index=list(TIPOS_EMBALAGEM_BASE.keys()).index(st.session_state.dados_laudo['itens'][i]['emb']),
-                        key=item_key_prefix + "emb",
-                        help="Selecione o tipo de acondicionamento primário.")
-
-                cols_item2 = st.columns([2, 2, 3])
-                with cols_item2[0]:
-                    embalagem_selecionada = st.session_state.dados_laudo['itens'][i]['emb']
-                    # Habilita cor para mais tipos, como no código Colab
-                    if embalagem_selecionada in ['pl', 'pa', 'e', 'z']:
-                        # Garante que cor_emb existe
-                        if 'cor_emb' not in st.session_state.dados_laudo['itens'][i]:
-                             st.session_state.dados_laudo['itens'][i]['cor_emb'] = None
-                        opcoes_cor = {None: " - Selecione - "}
-                        opcoes_cor.update({k: v.capitalize() for k, v in CORES_FEMININO_EMBALAGEM.items()})
-                        current_cor_key = st.session_state.dados_laudo['itens'][i]['cor_emb']
-                        # Garante que a chave atual existe nas opções
-                        try: cor_index = list(opcoes_cor.keys()).index(current_cor_key)
-                        except ValueError: cor_index = 0 ; st.session_state.dados_laudo['itens'][i]['cor_emb'] = None # Reseta se inválido
-
-                        st.session_state.dados_laudo['itens'][i]['cor_emb'] = st.selectbox(
-                            f"Cor Emb. (Item 1.{i+1})", options=list(opcoes_cor.keys()),
-                            format_func=lambda x: opcoes_cor[x], index=cor_index,
-                            key=item_key_prefix + "cor_emb",
-                            help="Selecione a cor da embalagem, se houver e for relevante."
-                        )
-                    else:
-                        st.text_input(f"Cor Emb. (Item 1.{i+1})", value="N/A", key=item_key_prefix + "cor_emb_disabled", disabled=True, help="Cor não aplicável para este tipo de embalagem.")
-                        st.session_state.dados_laudo['itens'][i]['cor_emb'] = None # Garante que cor é None
-                with cols_item2[1]:
-                    # Garante que ref existe
-                    if 'ref' not in st.session_state.dados_laudo['itens'][i]: st.session_state.dados_laudo['itens'][i]['ref'] = ''
-                    st.session_state.dados_laudo['itens'][i]['ref'] = st.text_input(
-                        f"Ref. Constatação (Item 1.{i+1})", value=st.session_state.dados_laudo['itens'][i]['ref'],
-                        key=item_key_prefix + "ref",
-                        help="Subitem correspondente no Laudo de Constatação (ex: 1.1).")
-                with cols_item2[2]:
-                    # Garante que pessoa existe
-                    if 'pessoa' not in st.session_state.dados_laudo['itens'][i]: st.session_state.dados_laudo['itens'][i]['pessoa'] = ''
-                    st.session_state.dados_laudo['itens'][i]['pessoa'] = st.text_input(
-                        f"Pessoa Relacionada (Item 1.{i+1})", value=st.session_state.dados_laudo['itens'][i]['pessoa'],
-                        key=item_key_prefix + "pessoa",
-                        help="(Opcional) Nome da pessoa associada a este material.")
-                st.markdown("", unsafe_allow_html=False)
+            with st.expander(f"Item 1.{i + 1}", expanded=True):
+                item = st.session_state.dados_laudo['itens'][i]
+                item_key = f"item_{i}_"
+            
+            # Linha 1 - Dados principais
+            col1, col2, col3 = st.columns([1, 2, 2])
+            with col1:
+                item['qtd'] = st.number_input(
+                    "Quantidade", min_value=1, value=item['qtd'],
+                    key=item_key+"qtd"
+                )
+            with col2:
+                item['tipo_mat'] = st.selectbox(
+                    "Tipo de material", options=list(TIPOS_MATERIAL_BASE.keys()),
+                    index=list(TIPOS_MATERIAL_BASE.keys()).index(item['tipo_mat']),
+                    key=item_key+"tipo_mat"
+                )
+            with col3:
+                item['emb'] = st.selectbox(
+                    "Embalagem", options=list(TIPOS_EMBALAGEM_BASE.keys()),
+                    index=list(TIPOS_EMBALAGEM_BASE.keys()).index(item['emb']),
+                    key=item_key+"emb"
+                )
+            
+            # Linha 2 - Detalhes adicionais
+            col4, col5 = st.columns(2)
+            with col4:
+                if item['emb'] in ['pl', 'pa', 'e', 'z']:
+                    item['cor_emb'] = st.selectbox(
+                        "Cor da embalagem", 
+                        options=[None] + list(CORES_FEMININO_EMBALAGEM.keys()),
+                        format_func=lambda x: "Selecione" if x is None else CORES_FEMININO_EMBALAGEM[x],
+                        index=0 if item['cor_emb'] is None else list(CORES_FEMININO_EMBALAGEM.keys()).index(item['cor_emb']) + 1,
+                        key=item_key+"cor_emb"
+                    )
+                else:
+                    st.info("Cor não aplicável para este tipo de embalagem")
+            
+            with col5:
+                item['ref'] = st.text_input(
+                    "Referência", value=item['ref'],
+                    key=item_key+"ref"
+                )
+                item['pessoa'] = st.text_input(
+                    "Pessoa relacionada (opcional)", value=item['pessoa'],
+                    key=item_key+"pessoa"
+                )
 
     st.markdown("---")
 
