@@ -649,7 +649,7 @@ def main():
             st.warning(f"Logo não carregado: {e}")
 
     with col_titulo:
-        st.markdown(f'<h1 style="color: {UI_COR_AZUL_SPTC}; margin-top: 0px;">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
+        st.markdown(f'<h1 style="color: {UI_COR_PRINCIPAL}; margin-top: 0px;">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
         st.markdown(f'<p style="color: {UI_COR_CINZA_SPTC}; font-size: 1em;">Identificação de Drogas - SPTC/GO</p>', unsafe_allow_html=True)
 
     if 'dados_laudo' not in st.session_state:
