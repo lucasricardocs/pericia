@@ -8,7 +8,7 @@ from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 import io
 from pytz import timezone
-from PIL import Image  # Importe a biblioteca PIL para trabalhar com imagens
+from PIL import Image
 
 def main():
     st.set_page_config(layout="centered", page_title="Gerador de Laudo")
@@ -168,35 +168,35 @@ def main():
 
     with st.form("laudo_form"):
         st.subheader("Informações do Laudo")
-        num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1)
+        num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
         lacre = st.text_input("Digite o número do lacre da contraprova:")
         numero_laudo = st.text_input("Digite o RG da perícia:")
 
         itens_data = []
-        for i in range(num_itens):
-            st.markdown(f"--- ### Item {i+1} ---")
-            col1, col2 = st.columns(2)
-            with col1:
-                qtd = st.number_input(f"Quantidade de porções do item {i+1}:", min_value=1, step=1, value=1)
-                tipo_mat_code = st.selectbox(f"Tipo de material do item {i+1} (v, po, pd, r):", options=list(TIPOS_MATERIAL_BASE.keys()))
-                emb_code = st.selectbox(f"Tipo de embalagem do item {i+1} (e, z, a, pl, pa):", options=list(TIPOS_EMBALAGEM_BASE.keys()))
-            with col2:
-                ref = st.text_input(f"Referência do subitem do item {i+1}:")
-                pessoa = st.text_input(f"Pessoa relacionada ao item {i+1} (opcional):")
-                cor_emb_code = None
-                if emb_code in ['pl', 'pa']:
-                    cor_emb_code = st.selectbox(f"Cor da embalagem do item {i+1}:", options=list(CORES_FEMININO_EMBALAGEM.keys()))
-                else:
+        for i in range(int(st.session_state.get("num_itens", 1))):
+            with st.expander(f"Item {i+1}"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    qtd = st.number_input(f"Quantidade de porções:", min_value=1, step=1, value=1, key=f"qtd_{i}")
+                    tipo_mat_code = st.selectbox(f"Tipo de material (v, po, pd, r):", options=list(TIPOS_MATERIAL_BASE.keys()), key=f"tipo_mat_{i}")
+                    emb_code = st.selectbox(f"Tipo de embalagem (e, z, a, pl, pa):", options=list(TIPOS_EMBALAGEM_BASE.keys()), key=f"emb_{i}")
+                with col2:
+                    ref = st.text_input(f"Referência do subitem:", key=f"ref_{i}")
+                    pessoa = st.text_input(f"Pessoa relacionada (opcional):", key=f"pessoa_{i}")
                     cor_emb_code = None
+                    if emb_code == 'pl' or emb_code == 'pa':
+                        cor_emb_code = st.selectbox(f"Cor da embalagem:", options=list(CORES_FEMININO_EMBALAGEM.keys()), key=f"cor_emb_{i}")
+                    else:
+                        cor_emb_code = None
 
-            itens_data.append({
-                'qtd': qtd,
-                'tipo_mat_code': tipo_mat_code,
-                'emb_code': emb_code,
-                'cor_emb_code': cor_emb_code,
-                'ref': ref,
-                'pessoa': pessoa
-            })
+                itens_data.append({
+                    'qtd': qtd,
+                    'tipo_mat_code': tipo_mat_code,
+                    'emb_code': emb_code,
+                    'cor_emb_code': cor_emb_code,
+                    'ref': ref,
+                    'pessoa': pessoa
+                })
 
         uploaded_image = st.file_uploader("Selecione uma imagem do material recebido (opcional):", type=["png", "jpg", "jpeg"])
 
@@ -224,7 +224,25 @@ def main():
             subitens_cannabis = {}
             subitens_cocaina = {}
 
-            for i, item_info in enumerate(itens_data):
+            itens_data_final = []
+            for i in range(int(st.session_state.get("num_itens", 1))):
+                qtd = st.session_state.get(f"qtd_{i}")
+                tipo_mat_code = st.session_state.get(f"tipo_mat_{i}")
+                emb_code = st.session_state.get(f"emb_{i}")
+                cor_emb_code = st.session_state.get(f"cor_emb_{i}")
+                ref = st.session_state.get(f"ref_{i}")
+                pessoa = st.session_state.get(f"pessoa_{i}")
+
+                itens_data_final.append({
+                    'qtd': qtd,
+                    'tipo_mat_code': tipo_mat_code,
+                    'emb_code': emb_code,
+                    'cor_emb_code': cor_emb_code,
+                    'ref': ref,
+                    'pessoa': pessoa
+                })
+
+            for i, item_info in enumerate(itens_data_final):
                 qtd = item_info['qtd']
                 qtd_ext = obter_quantidade_extenso(qtd)
                 tipo_mat_code = item_info['tipo_mat_code']
