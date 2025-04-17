@@ -198,9 +198,13 @@ def main():
         </style>
     """, unsafe_allow_html=True)
 
-    with st.container(class="material-recebido-box"):
-        st.subheader("2. MATERIAL RECEBIDO")
-        num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
+    st.markdown("""
+        <div class="material-recebido-box">
+            <h3>2. MATERIAL RECEBIDO</h3>
+        </div>
+    """, unsafe_allow_html=True)
+
+    num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
 
     itens_data = []
     for i in range(int(st.session_state.get("num_itens", 1))):
