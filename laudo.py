@@ -774,6 +774,7 @@ if numero_itens > 0:
                         key=item_key_prefix + "pessoa"
                     )
 
+    # IMPORTANTE: Esta linha precisa estar alinhada à esquerda fora do bloco do for/expand
     st.header("Upload da Imagem")
     uploaded_image = st.file_uploader(
         "Carregar imagem dos materiais recebidos",
@@ -783,8 +784,7 @@ if numero_itens > 0:
     if uploaded_image is not None:
         st.session_state.dados_laudo['imagem'] = uploaded_image
     elif 'image_uploader' in st.session_state and st.session_state.image_uploader is None:
-         st.session_state.dados_laudo['imagem'] = None
-
+        st.session_state.dados_laudo['imagem'] = None
     st.header("Gerar e Baixar Laudo")
 
     if st.button("📊 Gerar Laudo (.docx)"):
