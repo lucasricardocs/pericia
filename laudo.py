@@ -695,7 +695,7 @@ def main():
             })
     elif numero_itens < current_num_itens_in_state:
         st.session_state.dados_laudo['itens'] = st.session_state.dados_laudo['itens'][:numero_itens]
-if numero_itens > 0:
+    if numero_itens > 0:
         for i in range(numero_itens):
             with st.expander(f"Item 1.{i + 1}", expanded=True):
                 item_key_prefix = f"item_{i}_"
