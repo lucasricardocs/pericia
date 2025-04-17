@@ -540,44 +540,37 @@ def gerar_laudo_docx(dados_laudo):
 
 # --- Interface Streamlit ---
 def main():
-    # Configuração do tema escuro
     st.set_page_config(
         layout="centered", 
         page_title="Gerador de Laudo",
         page_icon="🔍"
     )
 
+    # === BLOCO CSS MODIFICADO ===
     st.markdown(
         f"""
         <style>
-        .stApp {{
-            background-color: {COR_FUNDO};
-            color: {COR_TEXTO};
+        /* Bordas estilo documento formal */
+        div[data-testid="stVerticalBlock"] > div:not([style*="overflow"]) {{
+            border: 1px solid {UI_COR_AZUL_SPTC};
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }}
-        .stTextInput, .stNumberInput, .stSelectbox, .stFileUploader {{
-            background-color: #2E2E2E !important;
-            color: {COR_TEXTO} !important;
-            border-color: #404040 !important;
-        }}
-        .st-bb, .st-at, .st-af, .stTextInput label, .stNumberInput label,
-        .stSelectbox label, .stFileUploader label {{
-            color: {UI_COR_CINZA_SPTC} !important;
-        }}
-        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {{
+
+        /* Ajuste dos títulos */
+        div[data-testid="stVerticalBlock"] > div > div > h2 {{
             color: {UI_COR_AZUL_SPTC} !important;
-            border-bottom: 1px solid {UI_COR_AZUL_SPTC} !important;
+            border-bottom: 2px solid {UI_COR_AZUL_SPTC};
+            padding-bottom: 4px;
         }}
-        .stButton>button {{
-            background-color: {UI_COR_AZUL_SPTC} !important;
-            color: {COR_FUNDO} !important;
-            border: none !important;
-        }}
-        .stButton>button:hover {{
-            background-color: #1E88E5 !important;
-            color: {COR_TEXTO} !important;
-        }}
-        hr {{
-            border-color: {UI_COR_AZUL_SPTC} !important;
+
+        /* Campos de input */
+        .stTextInput, .stNumberInput, .stSelectbox {{
+            border: 1px solid {UI_COR_AZUL_SPTC} !important;
+            border-radius: 4px;
+            padding: 4px 8px;
         }}
         </style>
         """,
