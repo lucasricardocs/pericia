@@ -1,77 +1,73 @@
-# --- Interface Streamlit ---
-    import streamlit as st
-    import re
-    from datetime import datetime
-    import docx
-    from docx import Document
-    from docx.shared import Pt, Inches
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
-    import io
-    from pytz import timezone
-    from PIL import Image
+import streamlit as st
+import re
+from datetime import datetime
+from docx import Document
+from docx.shared import Pt, Inches
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+import io
+from pytz import timezone
+from PIL import Image
 
-    def main():
-        st.set_page_config(layout="centered", page_title="Gerador de Laudo")
+def main():
+    st.set_page_config(layout="centered", page_title="Gerador de Laudo")
 
-        # --- Cores UI ---
-        UI_COR_AZUL_SPTC = "#eaeff2"
-        UI_COR_CINZA_SPTC = "#6E6E6E"
+    # --- Cores UI ---
+    UI_COR_AZUL_SPTC = "#eaeff2"
+    UI_COR_CINZA_SPTC = "#6E6E6E"
 
-        # --- MOVIDO: Data/Calendário (Acima da logo/título) ---
-        data_placeholder = st.empty()
-        def atualizar_data():
-            try:
-                brasilia_tz = timezone('America/Sao_Paulo')
-                now = datetime.now(brasilia_tz)
-                dias_semana_portugues = {
-                    0: "Segunda-feira", 1: "Terça-feira", 2: "Quarta-feira",
-                    3: "Quinta-feira", 4: "Sexta-feira", 5: "Sábado", 6: "Domingo"
-                }
-                meses_portugues = {
-                    1: "janeiro", 2: "fevereiro", 3: "março",
-                    4: "abril", 5: "maio", 6: "junho", 7: "julho",
-                    8: "agosto", 9: "setembro", 10: "outubro",
-                    11: "novembro", 12: "dezembro"
-                }
-                dia_semana = dias_semana_portugues.get(now.weekday(), '')
-                mes = meses_portugues.get(now.month, '')
-                data_formatada = f"{dia_semana}, {now.day} de {mes} de {now.year}"
-                # Adiciona um pouco de margem inferior para separar da linha seguinte
-                data_placeholder.markdown(f"""
-        <div style="text-align: right; font-size: 0.8em; color: {UI_COR_CINZA_SPTC}; line-height: 1.2; margin-bottom: 15px;">
-            <span>{data_formatada}</span><br>
-            <span style="font-size: 0.8em;">(Goiânia-GO)</span>
-        </div>""", unsafe_allow_html=True)
-            except Exception as e:
-                now = datetime.now()
-                fallback_str = now.strftime("%d/%m/%Y")
-                data_placeholder.markdown(f"""
-        <div style="text-align: right; font-size: 0.8em; color: #FF5555; line-height: 1.2; margin-bottom: 15px;">
-            <span>{fallback_str} (Local)</span><br>
-            <span style="font-size: 0.8em;">Erro Fuso Horário: {e}</span>
-        </div>""", unsafe_allow_html=True)
-        atualizar_data() # Chama a função para exibir a data
+    # --- Exibir data ---
+    data_placeholder = st.empty()
 
-        # --- Cabeçalho com Logo e Título --- (Data foi movida para cima)
-        # Ajuste as proporções se necessário, removendo a coluna da data
-        col_logo, col_titulo = st.columns([1, 5]) # Ex: Proporção 1 para logo, 5 para título
-        with col_logo: # Coluna da Logo
-            logo_path = "logo_policia_cientifica.png"
-            try:
-                # Reduz a largura da imagem da logo
-                st.image(logo_path, width=100) # <<-- LARGURA REDUZIDA AQUI (Ajuste 100, 110, 120...)
-            except FileNotFoundError:
-                st.error(f"Erro: Logo '{logo_path}' não encontrado.")
-                st.info("Coloque 'logo_policia_cientifica.png' na mesma pasta do script.")
-            except Exception as e:
-                st.warning(f"Logo não carregado: {e}")
-        with col_titulo: # Coluna do Título
-            # Adicionado margin para tentar alinhar melhor com logo menor
-            st.markdown(f'<h1 style="color: {UI_COR_AZUL_SPTC}; margin-top: 0px; margin-bottom: 0px;">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
-            st.markdown(f'<p style="color: {UI_COR_CINZA_SPTC}; font-size: 1em;">Identificação de Drogas - SPTC/GO</p>', unsafe_allow_html=True)
-        st.markdown("---") # Separador visual
+    def atualizar_data():
+        try:
+            brasilia_tz = timezone('America/Sao_Paulo')
+            now = datetime.now(brasilia_tz)
+            dias_semana_portugues = [
+                "Segunda-feira", "Terça-feira", "Quarta-feira",
+                "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"
+            ]
+            meses_portugues = [
+                "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
+            ]
+            dia_semana = dias_semana_portugues[now.weekday()]
+            mes = meses_portugues[now.month - 1]
+            data_formatada = f"{dia_semana}, {now.day} de {mes} de {now.year}"
+            data_placeholder.markdown(f"""
+                <div style='text-align: right; font-size: 0.8em; color: {UI_COR_CINZA_SPTC}; margin-bottom: 15px;'>
+                    <span>{data_formatada}</span><br>
+                    <span style='font-size: 0.8em;'>(Goiânia-GO)</span>
+                </div>
+            """, unsafe_allow_html=True)
+        except Exception as e:
+            fallback_str = datetime.now().strftime("%d/%m/%Y")
+            data_placeholder.markdown(f"""
+                <div style='text-align: right; font-size: 0.8em; color: #FF5555; margin-bottom: 15px;'>
+                    <span>{fallback_str} (Local)</span><br>
+                    <span style='font-size: 0.8em;'>Erro Fuso Horário: {e}</span>
+                </div>
+            """, unsafe_allow_html=True)
 
-        # --- Constantes ---
+    atualizar_data()
+
+    # --- Cabeçalho ---
+    col_logo, col_titulo = st.columns([1, 5])
+    with col_logo:
+        logo_path = "logo_policia_cientifica.png"
+        try:
+            st.image(logo_path, width=100)
+        except FileNotFoundError:
+            st.error(f"Erro: Logo '{logo_path}' não encontrado.")
+        except Exception as e:
+            st.warning(f"Logo não carregado: {e}")
+
+    with col_titulo:
+        st.markdown(f"<h1 style='color: {UI_COR_AZUL_SPTC}; margin: 0;'>Gerador de Laudo Pericial</h1>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: {UI_COR_CINZA_SPTC}; font-size: 1em;'>Identificação de Drogas - SPTC/GO</p>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+ # --- Constantes ---
         TIPOS_MATERIAL_BASE = {
             "v": "vegetal dessecado",
             "po": "pulverizado",
@@ -402,3 +398,4 @@
 
     if __name__ == "__main__":
         main()
+    
