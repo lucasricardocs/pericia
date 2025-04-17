@@ -235,7 +235,7 @@ def main():
     st.markdown("""
         <style>
         .upload-image-box {
-            border: 0.2px; /* Sem borda */
+            border: 0.2px solid #ccc; /* Borda sólida muito fina e cinza claro */
             border-radius: 8px;
             box-shadow: none; /* Sombra ainda mais suave */
             padding: 8px;
