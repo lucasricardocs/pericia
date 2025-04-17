@@ -170,7 +170,6 @@ def main():
     lacre = st.text_input("Digite o número do lacre da contraprova:")
     numero_laudo = st.text_input("Digite o RG da perícia:")
     st.markdown("---") # Separador visual
-
     
     st.subheader("2. MATERIAL RECEBIDO") 
     itens_data = []
@@ -199,10 +198,24 @@ def main():
                 'ref': ref,
                 'pessoa': pessoa
             })
-            
-    st.subheader("3. Upload da Imagem")
-    uploaded_image = st.file_uploader("Selecione uma imagem do material recebido:", type=["png", "jpg", "jpeg"])            
     st.markdown("---") # Separador visual
+            
+    st.markdown("""
+        <style>
+        .upload-image-box {
+            border: 1px solid #ccc; /* Cor e espessura da borda */
+            border-radius: 10px; /* Raio para as bordas arredondadas */
+            box-shadow: 2px 2px 5px #888888; /* Deslocamento horizontal, vertical, blur e cor da sombra */
+            padding: 15px; /* Espaçamento interno do box */
+            margin-top: 10px; /* Margem superior para separar do conteúdo anterior */
+            margin-bottom: 10px; /* Margem inferior para separar do conteúdo seguinte */
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    with st.container(class="upload-image-box"):
+        st.subheader("3. Upload da Imagem")
+        uploaded_image = st.file_uploader("Selecione uma imagem do material recebido:", type=["png", "jpg", "jpeg"])
    
     if st.button("Gerar Laudo"):
         document = Document()
