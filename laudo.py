@@ -648,58 +648,65 @@ def gerar_laudo_docx(dados_laudo):
 
 # --- Interface Streamlit ---
 def main():
-    st.set_page_config(layout="centered", page_title="Gerador de Laudo")
+    # 1. ATIVAR TEMA ESCURO E MANTER LAYOUT CENTRALIZADO
+    st.set_page_config(
+        layout="centered",         # Mantém o layout centralizado como definido antes
+        page_title="Gerador de Laudo", # Título da aba do navegador
+        theme="dark"               # <<< ADICIONA O TEMA ESCURO AQUI
+    )
 
-    # --- Cores UI ---
-    UI_COR_AZUL_SPTC = "#eaeff2"
-    UI_COR_CINZA_SPTC = "#6E6E6E"
+    # --- Novas Cores UI para Tema Escuro ---
+    # UI_COR_AZUL_SPTC = "#eaeff2" # Cor original do título - vamos deixar o tema definir por padrão
+    UI_COR_TEXTO_SECUNDARIO_DARK = "#B0B3B8" # Um cinza claro para subtítulo/data no tema escuro
+    UI_COR_ERRO_DARK = "#FF5555"            # Cor para erros (vermelho claro)
 
-    # --- MOVIDO: Data/Calendário (Acima da logo/título) ---
+    # --- Data/Calendário ---
     data_placeholder = st.empty()
     def atualizar_data():
         try:
             brasilia_tz = pytz.timezone('America/Sao_Paulo')
             now = datetime.now(brasilia_tz)
-            dia_semana = dias_semana_portugues.get(now.weekday(), '')
-            mes = meses_portugues.get(now.month, '')
+            dia_semana = dias_semana_portugues.get(now.weekday(), '') # [source: 74]
+            mes = meses_portugues.get(now.month, '') # [source: 74]
             data_formatada = f"{dia_semana}, {now.day} de {mes} de {now.year}"
-            # Adiciona um pouco de margem inferior para separar da linha seguinte
+            # 2. AJUSTAR COR DA DATA PARA O TEMA ESCURO
             data_placeholder.markdown(f"""
-            <div style="text-align: right; font-size: 0.5em; color: {UI_COR_CINZA_SPTC}; line-height: 1.2; margin-bottom: 15px;">
+            <div style="text-align: right; font-size: 0.9em; color: {UI_COR_TEXTO_SECUNDARIO_DARK}; line-height: 1.2; margin-bottom: 15px;">
                 <span>{data_formatada}</span><br>
                 <span style="font-size: 0.8em;">(Goiânia-GO)</span>
-            </div>""", unsafe_allow_html=True)
+            </div>""", unsafe_allow_html=True) # [Referência de estilo em source: 75]
         except Exception as e:
             now = datetime.now()
             fallback_str = now.strftime("%d/%m/%Y")
+            # Usando a cor de erro definida
             data_placeholder.markdown(f"""
-            <div style="text-align: right; font-size: 0.9em; color: #FF5555; line-height: 1.2; margin-bottom: 15px;">
+            <div style="text-align: right; font-size: 0.9em; color: {UI_COR_ERRO_DARK}; line-height: 1.2; margin-bottom: 15px;">
                 <span>{fallback_str} (Local)</span><br>
                 <span style="font-size: 0.8em;">Erro Fuso Horário: {e}</span>
-            </div>""", unsafe_allow_html=True)
-    atualizar_data() # Chama a função para exibir a data
+            </div>""", unsafe_allow_html=True) # [Referência de estilo em source: 76]
+    atualizar_data()
 
-    # --- Cabeçalho com Logo e Título --- (Data foi movida para cima)
-    # Ajuste as proporções se necessário, removendo a coluna da data
-    col_logo, col_titulo = st.columns([1, 5]) # Ex: Proporção 1 para logo, 5 para título
+    # --- Cabeçalho com Logo e Título ---
+    col_logo, col_titulo = st.columns([1, 5]) # [source: 77]
 
-    with col_logo: # Coluna da Logo
-        logo_path = "logo_policia_cientifica.png"
+    with col_logo:
+        logo_path = "logo_policia_cientifica.png" # [source: 77]
         try:
-            # Reduz a largura da imagem da logo
-            st.image(logo_path, width=100) # <<-- LARGURA REDUZIDA AQUI (Ajuste 100, 110, 120...)
+            st.image(logo_path, width=100) # [source: 77-78]
         except FileNotFoundError:
-            st.error(f"Erro: Logo '{logo_path}' não encontrado.")
+            st.error(f"Erro: Logo '{logo_path}' não encontrado.") # [source: 78]
             st.info("Coloque 'logo_policia_cientifica.png' na mesma pasta do script.")
         except Exception as e:
-            st.warning(f"Logo não carregado: {e}")
+            st.warning(f"Logo não carregado: {e}") # [source: 78]
 
-    with col_titulo: # Coluna do Título
-        # Adicionado margin para tentar alinhar melhor com logo menor
-        st.markdown(f'<h1 style="color: {UI_COR_AZUL_SPTC}; margin-top: 0px; margin-bottom: 0px;">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
-        st.markdown(f'<p style="color: {UI_COR_CINZA_SPTC}; font-size: 1em;">Identificação de Drogas - SPTC/GO</p>', unsafe_allow_html=True)
+    with col_titulo:
+        # 3. REMOVER COR EXPLÍCITA DO TÍTULO (deixar tema dark definir)
+        st.markdown(f'<h1 style="margin-top: 0px; margin-bottom: 0px;">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True) # [Referência de estilo em source: 79-80]
+        # 4. AJUSTAR COR DO SUBTÍTULO PARA O TEMA ESCURO
+        st.markdown(f'<p style="color: {UI_COR_TEXTO_SECUNDARIO_DARK}; font-size: 1em;">Identificação de Drogas - SPTC/GO</p>', unsafe_allow_html=True) # [Referência de estilo em source: 80]
 
     st.markdown("---") # Separador visual
+
 
     # --- Inicialização do Estado da Sessão (Adicionado lacre e rg_pericia) ---
     if 'dados_laudo' not in st.session_state:
