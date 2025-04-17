@@ -381,8 +381,15 @@ def main():
         )
 
 if __name__ == "__main__":
-    query_params = st.experimental_get_query_params()
-if 'theme' in query_params and query_params['theme'][0] in ['light', 'dark']:
-    st.session_state.theme = query_params['theme'][0]
-        st.session_state.theme = st.query_params['theme']
+    # Obter parâmetros da URL (para versões mais novas do Streamlit)
+    query_params = st.query_params if hasattr(st, 'query_params') else st.experimental_get_query_params()
+    
+    # Verificar e definir tema
+    if 'theme' in query_params:
+        theme_param = query_params['theme']
+        if isinstance(theme_param, list):  # Se houver múltiplos valores
+            theme_param = theme_param[0]
+        if theme_param in ['light', 'dark']:
+            st.session_state.theme = theme_param
+    
     main()
