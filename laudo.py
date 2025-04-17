@@ -232,7 +232,7 @@ def main():
                 'pessoa': pessoa
             })
             
-st.markdown("""
+    st.markdown("""
         <style>
         .upload-image-box {
             background-color: rgba(255, 255, 255, 0.5); /* Branco com 50% de opacidade */
