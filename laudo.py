@@ -166,14 +166,43 @@ def main():
         run.bold = bold
         run.font.size = Pt(size)
 
-    st.subheader("1. Informações do Laudo")
-    lacre = st.text_input("Digite o número do lacre da contraprova:")
-    numero_laudo = st.text_input("Digite o RG da perícia:")
-    st.markdown("---") # Separador visual
+    st.markdown("""
+        <style>
+        .laudo-info-box {
+            border: 1px solid #ddd; /* Borda clara */
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+        <div class="laudo-info-box">
+            <h3>1. Informações do Laudo</h3>
+            <input type="text" placeholder="Digite o número do lacre da contraprova:" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #eee; border-radius: 4px;">
+            <input type="text" placeholder="Digite o RG da perícia:" style="width: 100%; padding: 8px; border: 1px solid #eee; border-radius: 4px;">
+        </div>
+    """, unsafe_allow_html=True)
     
-    st.subheader("2. MATERIAL RECEBIDO") 
+    st.markdown("""
+        <style>
+        .material-recebido-box {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    with st.container(class="material-recebido-box"):
+        st.subheader("2. MATERIAL RECEBIDO")
+        num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
+
     itens_data = []
-    num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
     for i in range(int(st.session_state.get("num_itens", 1))):
         with st.expander(f"Item {i+1}"):
             col1, col2 = st.columns(2)
@@ -198,14 +227,13 @@ def main():
                 'ref': ref,
                 'pessoa': pessoa
             })
-    st.markdown("---") # Separador visual
             
     st.markdown("""
         <style>
         .upload-image-box {
             border: none; /* Sem borda */
             border-radius: 8px;
-            box-shadow: 1px 1px 2px #eee; /* Sombra ainda mais suave */
+            box-shadow: 1px 1px 1px #eee; /* Sombra ainda mais suave */
             padding: 8px;
             margin-top: 10px;
             margin-bottom: 10px;
