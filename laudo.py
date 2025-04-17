@@ -202,7 +202,8 @@ def main():
         <div class="material-recebido-box">
             <h3>2. MATERIAL RECEBIDO</h3>
         </div>
-
+    """, unsafe_allow_html=True)
+        
     num_itens = st.number_input("Quantos itens deseja descrever?", min_value=1, step=1, value=1, key="num_itens")
 
     itens_data = []
@@ -230,7 +231,6 @@ def main():
                 'ref': ref,
                 'pessoa': pessoa
             })
-    """, unsafe_allow_html=True)
             
     st.markdown("""
         <style>
