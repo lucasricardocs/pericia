@@ -232,12 +232,11 @@ def main():
                 'pessoa': pessoa
             })
             
-    st.markdown("""
+st.markdown("""
         <style>
         .upload-image-box {
-            border: 0.2px solid #ccc; /* Borda sólida muito fina e cinza claro */
+            background-color: rgba(255, 255, 255, 0.5); /* Branco com 50% de opacidade */
             border-radius: 8px;
-            box-shadow: none; /* Sombra ainda mais suave */
             padding: 8px;
             margin-top: 10px;
             margin-bottom: 10px;
