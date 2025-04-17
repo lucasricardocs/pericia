@@ -546,31 +546,47 @@ def main():
         page_icon="🔍"
     )
 
-    # === BLOCO CSS MODIFICADO ===
+    # === CSS ATUALIZADO (SEM BORDAS) ===
     st.markdown(
         f"""
         <style>
-        /* Bordas estilo documento formal */
-        div[data-testid="stVerticalBlock"] > div:not([style*="overflow"]) {{
-            border: 1px solid {UI_COR_AZUL_SPTC};
-            border-radius: 8px;
-            padding: 12px;
-            margin: 12px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .stApp {{
+            background-color: {COR_FUNDO};
+            color: {COR_TEXTO};
         }}
 
-        /* Ajuste dos títulos */
-        div[data-testid="stVerticalBlock"] > div > div > h2 {{
-            color: {UI_COR_AZUL_SPTC} !important;
-            border-bottom: 2px solid {UI_COR_AZUL_SPTC};
-            padding-bottom: 4px;
-        }}
-
-        /* Campos de input */
-        .stTextInput, .stNumberInput, .stSelectbox {{
-            border: 1px solid {UI_COR_AZUL_SPTC} !important;
+        /* Elementos de input limpos */
+        .stTextInput, .stNumberInput, .stSelectbox, .stFileUploader {{
+            background-color: #2E2E2E;
+            color: {COR_TEXTO};
+            border: none !important;
             border-radius: 4px;
-            padding: 4px 8px;
+            padding: 8px;
+        }}
+
+        /* Títulos simplificados */
+        h1, h2, h3 {{
+            color: {UI_COR_AZUL_SPTC} !important;
+            border-bottom: none !important;
+            margin-bottom: 1rem !important;
+        }}
+
+        /* Espaçamento melhorado */
+        .stExpander {{
+            margin: 1rem 0;
+        }}
+
+        /* Botão principal */
+        .stButton>button {{
+            background-color: {UI_COR_AZUL_SPTC} !important;
+            color: {COR_FUNDO} !important;
+            border: none !important;
+            width: 100%;
+            transition: opacity 0.2s;
+        }}
+
+        .stButton>button:hover {{
+            opacity: 0.9;
         }}
         </style>
         """,
