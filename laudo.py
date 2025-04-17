@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Gerador de Laudo Pericial v2.7 (Streamlit - Foco nos Itens + Cores SPTC)
+Gerador de Laudo Pericial v3.0 (Streamlit + Lógica Colab + Cores SPTC)
 
-Este script gera laudos periciais para identificação de drogas, focando
-diretamente na descrição dos itens recebidos. A seção de informações
-gerais foi removida. As cores da interface e do DOCX foram ajustadas
-para seguir a identidade visual da SPTC/GO.
+Combina a interface Streamlit e formatação DOCX avançada com a lógica
+de geração de texto e entradas (lacre, RG) do script original do Colab.
+Usa a fonte 'Gadugi' e o método de itálico do script Colab.
 
 Requerimentos:
     - streamlit
@@ -15,11 +14,11 @@ Requerimentos:
 
 Uso:
     1. Instale as dependências: pip install streamlit python-docx Pillow pytz
-    2. Salve este código como 'gerador_laudo_itens.py'
+    2. Salve este código como 'gerador_laudo_combinado.py'
     3. Salve a imagem do logo como 'logo_policia_cientifica.png' no mesmo diretório.
-    4. Execute o script: streamlit run gerador_laudo_itens.py
-    5. Interaja com a interface web para descrever os itens e gerar o laudo.
-    6. Baixe o laudo gerado como um arquivo .docx.
+    4. Execute o script: streamlit run gerador_laudo_combinado.py
+    5. Interaja com a interface web para inserir dados e gerar o laudo.
+    6. Baixe o laudo gerado como um arquivo .docx (nomeado com o RG da Perícia).
 """
 
 import re
@@ -75,17 +74,27 @@ dias_semana_portugues = {
 }
 
 # Cores Institucionais SPTC/GO (para uso no DOCX)
-# Azul SPTC: #00478F -> RGB(0, 71, 143)
-# Cinza SPTC: #6E6E6E -> RGB(110, 110, 110)
-# Preto: #000000 -> RGB(0, 0, 0)
-# Branco: #FFFFFF -> RGB(255, 255, 255)
 DOCX_COR_AZUL_SPTC = RGBColor(0, 71, 143)
 DOCX_COR_CINZA_SPTC = RGBColor(110, 110, 110)
 DOCX_COR_PRETO = RGBColor(0, 0, 0)
 
+# Lista de termos para itálico (do código original Colab)
+TERMOS_ITALICO_ORIGINAL = [
+    'Cannabis sativa L.', # Adicionado L. para consistência
+    'Cannabis sativa',
+    'Scientific Working Group for the Analysis of Seized Drugs',
+    'United Nations Office on Drugs and Crime',
+    'Fast blue salt B', # Usado na seção de Exames do código Colab
+    'eppendorf',
+    'ziplock',
+    'Tetrahidrocanabinol', # Mencionado na conclusão Colab
+    'Portaria nº 344/1998', # Itálico não usual, mas presente implicitamente na formatação Colab
+    'RDC nº 970, de 19/03/2025' # Idem
+    # Adicionar outros termos se necessário
+]
 
 # --- Funções Auxiliares (Pluralização, Extenso, Parágrafo, Imagem) ---
-# (Mantidas as mesmas funções auxiliares da versão anterior)
+# (Mantidas as mesmas funções auxiliares da versão anterior - 'codigo bonito.txt')
 def pluralizar_palavra(palavra, quantidade):
     """Pluraliza palavras em português (com algumas regras básicas)."""
     if quantidade == 1:
@@ -184,12 +193,12 @@ def inserir_imagem_docx(doc, image_file_uploader):
 
 def configurar_estilos(doc):
     """Configura os estilos de parágrafo e caractere do documento docx
-       usando as cores institucionais da SPTC/GO."""
+       usando a fonte 'Gadugi' e cores institucionais da SPTC/GO."""
 
-    # Usa as cores institucionais definidas globalmente
-    COR_TEXTO_PRINCIPAL = DOCX_COR_PRETO        # Preto para corpo do texto
-    COR_DESTAQUE = DOCX_COR_AZUL_SPTC           # Azul SPTC para Títulos
-    COR_TEXTO_SECUNDARIO = DOCX_COR_CINZA_SPTC  # Cinza SPTC para Legendas/Secundário
+    FONTE_PADRAO = 'Gadugi' # Alterado para Gadugi
+    COR_TEXTO_PRINCIPAL = DOCX_COR_PRETO
+    COR_DESTAQUE = DOCX_COR_AZUL_SPTC
+    COR_TEXTO_SECUNDARIO = DOCX_COR_CINZA_SPTC
 
     def get_or_add_style(doc, style_name, style_type):
         """Tenta obter um estilo, se não existir, tenta adicioná-lo."""
@@ -202,51 +211,40 @@ def configurar_estilos(doc):
                 print(f"Falha ao adicionar estilo '{style_name}': {e}. Usando 'Normal' como fallback.")
                 return doc.styles['Normal'] # Retorna um estilo padrão seguro
 
-    # Estilo Normal (Base) - Cor do texto principal (Preto)
+    # Estilo Normal (Base)
     paragrafo_style = doc.styles['Normal']
-    paragrafo_style.font.name = 'Calibri'
+    paragrafo_style.font.name = FONTE_PADRAO # Gadugi
     paragrafo_style.font.size = Pt(12)
-    paragrafo_style.font.color.rgb = COR_TEXTO_PRINCIPAL # Preto
+    paragrafo_style.font.color.rgb = COR_TEXTO_PRINCIPAL
     paragrafo_style.paragraph_format.line_spacing = 1.15
     paragrafo_style.paragraph_format.space_before = Pt(0)
     paragrafo_style.paragraph_format.space_after = Pt(8)
 
-    # Estilo para Títulos Principais (Seções) - Cor de destaque (Azul SPTC)
+    # Estilo para Títulos Principais (Seções)
     titulo_principal_style = get_or_add_style(doc, 'TituloPrincipal', WD_STYLE_TYPE.PARAGRAPH)
     titulo_principal_style.base_style = doc.styles['Normal']
-    titulo_principal_style.font.name = 'Calibri'
+    titulo_principal_style.font.name = FONTE_PADRAO # Gadugi
     titulo_principal_style.font.size = Pt(14)
     titulo_principal_style.font.bold = True
     titulo_principal_style.font.color.rgb = COR_DESTAQUE # Azul SPTC
     titulo_principal_style.paragraph_format.space_before = Pt(12)
     titulo_principal_style.paragraph_format.space_after = Pt(6)
 
-    # Estilo para Títulos Secundários (Subseções) - Cor de destaque (Azul SPTC)
+    # Estilo para Títulos Secundários (Subseções)
     titulo_secundario_style = get_or_add_style(doc, 'TituloSecundario', WD_STYLE_TYPE.PARAGRAPH)
     titulo_secundario_style.base_style = doc.styles['Normal']
-    titulo_secundario_style.font.name = 'Calibri'
+    titulo_secundario_style.font.name = FONTE_PADRAO # Gadugi
     titulo_secundario_style.font.size = Pt(12)
     titulo_secundario_style.font.bold = True
     titulo_secundario_style.font.color.rgb = COR_DESTAQUE # Azul SPTC
     titulo_secundario_style.paragraph_format.space_before = Pt(10)
     titulo_secundario_style.paragraph_format.space_after = Pt(4)
 
-    # Estilo de caractere para Itálico (se não existir)
-    if 'Italico' not in doc.styles:
-        try:
-            italico_style = doc.styles.add_style('Italico', WD_STYLE_TYPE.CHARACTER)
-            italico_style.font.italic = True
-            italico_style.base_style = doc.styles['Default Paragraph Font']
-        except Exception as e:
-            print(f"Não foi possível criar estilo 'Italico': {e}")
-    elif doc.styles['Italico'].type == WD_STYLE_TYPE.CHARACTER:
-        doc.styles['Italico'].font.italic = True
-
-    # Estilo para Legendas de Ilustrações - Cor de texto secundário (Cinza SPTC)
+    # Estilo para Legendas de Ilustrações
     ilustracao_style = get_or_add_style(doc, 'Ilustracao', WD_STYLE_TYPE.PARAGRAPH)
     ilustracao_style.base_style = doc.styles['Normal']
-    ilustracao_style.font.name = 'Calibri'
-    ilustracao_style.font.size = Pt(10)
+    ilustracao_style.font.name = FONTE_PADRAO # Gadugi
+    ilustracao_style.font.size = Pt(10) # Tamanho menor para legenda
     ilustracao_style.font.italic = True
     ilustracao_style.font.color.rgb = COR_TEXTO_SECUNDARIO # Cinza SPTC
     ilustracao_style.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -265,6 +263,9 @@ def configurar_pagina(doc):
 
 def adicionar_cabecalho_rodape(doc):
     """Adiciona cabeçalho e rodapé padrão ao documento docx."""
+    FONTE_CABECALHO_RODAPE = 'Gadugi' # Usar Gadugi aqui também
+    TAMANHO_CABECALHO_RODAPE = Pt(10)
+
     section = doc.sections[0] # Assume que há pelo menos uma seção
 
     # --- Cabeçalho ---
@@ -273,35 +274,38 @@ def adicionar_cabecalho_rodape(doc):
     if header.paragraphs:
         for para in header.paragraphs:
             p_element = para._element
-            p_element.getparent().remove(p_element)
+            if p_element.getparent() is not None:
+                p_element.getparent().remove(p_element)
+
     # Adiciona novo cabeçalho
     header_paragraph = header.add_paragraph()
     run_header_left = header_paragraph.add_run("POLÍCIA CIENTÍFICA DE GOIÁS")
-    run_header_left.font.name = 'Calibri'
-    run_header_left.font.size = Pt(10)
+    run_header_left.font.name = FONTE_CABECALHO_RODAPE
+    run_header_left.font.size = TAMANHO_CABECALHO_RODAPE
     run_header_left.font.bold = True
     header_paragraph.add_run("\t\t") # Usar tabulação para espaçar
     run_header_right = header_paragraph.add_run("LAUDO DE PERÍCIA CRIMINAL")
-    run_header_right.font.name = 'Calibri'
-    run_header_right.font.size = Pt(10)
+    run_header_right.font.name = FONTE_CABECALHO_RODAPE
+    run_header_right.font.size = TAMANHO_CABECALHO_RODAPE
     run_header_right.font.bold = False
-    header_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    header_paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT # Alinhado à direita fica melhor
 
     # --- Rodapé (Numeração de Página) ---
     footer = section.footer
     # Limpa rodapé existente
     if footer.paragraphs:
         for para in footer.paragraphs:
-            p_element = para._element
-            p_element.getparent().remove(p_element)
+             p_element = para._element
+             if p_element.getparent() is not None:
+                 p_element.getparent().remove(p_element)
     # Adiciona parágrafo para numeração
     page_num_paragraph = footer.add_paragraph()
     page_num_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
     # Adiciona "Página X"
     run_page = page_num_paragraph.add_run("Página ")
-    run_page.font.name = 'Calibri'
-    run_page.font.size = Pt(10)
+    run_page.font.name = FONTE_CABECALHO_RODAPE
+    run_page.font.size = TAMANHO_CABECALHO_RODAPE
     # Campo PAGE
     fld_char_begin = OxmlElement('w:fldChar')
     fld_char_begin.set(qn('w:fldCharType'), 'begin')
@@ -319,8 +323,8 @@ def adicionar_cabecalho_rodape(doc):
 
     # Adiciona " de Y"
     run_num_pages = page_num_paragraph.add_run(" de ")
-    run_num_pages.font.name = 'Calibri'
-    run_num_pages.font.size = Pt(10)
+    run_num_pages.font.name = FONTE_CABECALHO_RODAPE
+    run_num_pages.font.size = TAMANHO_CABECALHO_RODAPE
     # Campo NUMPAGES
     fld_char_begin_np = OxmlElement('w:fldChar')
     fld_char_begin_np.set(qn('w:fldCharType'), 'begin')
@@ -336,25 +340,19 @@ def adicionar_cabecalho_rodape(doc):
     fld_char_end_np.set(qn('w:fldCharType'), 'end')
     run_num_pages._r.append(fld_char_end_np)
 
-# --- Seção de Preâmbulo REMOVIDA ---
-
-# --- Funções das Seções do Laudo (Numeração Ajustada) ---
-# (As funções adicionar_material_recebido, adicionar_objetivo_exames,
-# adicionar_exames, adicionar_resultados, adicionar_conclusao,
-# adicionar_custodia_material, adicionar_referencias,
-# adicionar_encerramento_assinatura, aplicar_italico_especifico
-# são mantidas como na versão anterior, pois já usam os estilos
-# configurados em configurar_estilos, que agora têm as cores corretas)
+# --- Funções das Seções do Laudo (Numeração e Conteúdo Ajustados) ---
 
 def adicionar_material_recebido(doc, dados_laudo):
     """Adiciona a seção '1 MATERIAL RECEBIDO PARA EXAME' ao laudo docx."""
+    # Numeração corrigida para 1.
     adicionar_paragrafo(doc, "1 MATERIAL RECEBIDO PARA EXAME", style='TituloPrincipal')
-    adicionar_paragrafo(doc, "O material foi recebido neste Instituto devidamente acondicionado e lacrado.", align='justify', style='Normal')
+    # Texto introdutório pode ser adicionado aqui se desejado. Ex:
+    # adicionar_paragrafo(doc, "O material foi recebido neste Instituto devidamente acondicionado e lacrado.", align='justify', style='Normal')
 
     imagem_carregada = dados_laudo.get('imagem')
     if imagem_carregada:
         inserir_imagem_docx(doc, imagem_carregada)
-        # Adiciona legenda à imagem (usará a cor Cinza SPTC definida no estilo 'Ilustracao')
+        # Adiciona legenda à imagem (usará a cor Cinza SPTC e fonte Gadugi definida no estilo 'Ilustracao')
         adicionar_paragrafo(doc, "Ilustração 1: Material(is) recebido(s).", style='Ilustracao')
 
     subitens_cannabis = {}
@@ -380,371 +378,362 @@ def adicionar_material_recebido(doc, dados_laudo):
         embalagem_base_plural = pluralizar_palavra(embalagem, qtd)
         embalagem_final = f"{embalagem_base_plural}{desc_cor}"
         porcao = pluralizar_palavra("porção", qtd)
-        acond = "acondicionada em" if qtd == 1 else "acondicionadas individualmente em"
+        acond = "acondicionada em" if qtd == 1 else "acondicionadas, individualmente, em" # Ajustado ", individualmente,"
         ref_texto = f", relacionada a {item['pessoa']}" if item.get('pessoa') else ""
         subitem_ref = item.get('ref', '')
-        subitem_texto = f", referente(s) à(s) amostra(s) do(s) subitem(ns) {subitem_ref} do laudo de constatação (se aplicável)" if subitem_ref else ""
-        item_num_str = f"1.{i + 1}"
-        texto = (f"{item_num_str} – {qtd} ({qtd_ext}) {porcao} de material {tipo_material}, "
-                 f"{acond} {embalagem_final}{subitem_texto}{ref_texto}.")
+        # Texto adaptado do código Colab original
+        subitem_texto = f", referente à amostra do subitem {subitem_ref} do laudo de constatação supracitado" if subitem_ref else ""
+        item_num_str = f"1.{i + 1}" # Numeração corrigida para 1.x
+        final_ponto = "."
+
+        texto = (f"{item_num_str} {qtd} ({qtd_ext}) {porcao} de material {tipo_material}, {acond} {embalagem_final}{subitem_texto}{ref_texto}{final_ponto}")
         adicionar_paragrafo(doc, texto, style='Normal', align='justify')
 
-        chave_mapeamento = subitem_ref if subitem_ref else f"Item_{item_num_str}"
+        # Mapeamento para Exames/Resultados/Conclusão
+        chave_mapeamento = subitem_ref if subitem_ref else f"Item_{item_num_str}" # Mantém fallback se ref vazia
+        item_num_referencia = item_num_str # Usar a referência 1.x para os textos
         if tipo_mat_cod in ["v", "r"]:
-             subitens_cannabis[chave_mapeamento] = item_num_str
+            subitens_cannabis[chave_mapeamento] = item_num_referencia
         elif tipo_mat_cod in ["po", "pd"]:
-             subitens_cocaina[chave_mapeamento] = item_num_str
+             subitens_cocaina[chave_mapeamento] = item_num_referencia
 
     return subitens_cannabis, subitens_cocaina
 
 def adicionar_objetivo_exames(doc):
-    """Adiciona a seção '2 OBJETIVO DOS EXAMES'."""
-    adicionar_paragrafo(doc, "2 OBJETIVO DOS EXAMES", style='TituloPrincipal') # Usará Azul SPTC
-    texto = ("O objetivo dos exames é identificar a natureza do material apresentado, verificando "
-             "a presença de substâncias entorpecentes ou psicotrópicas capazes de causar dependência "
-             "física ou psíquica, cujo uso e/ou comercialização são proscritos em todo o território "
-             "nacional, conforme legislação vigente (Portaria SVS/MS nº 344/1998 e suas atualizações).")
-    adicionar_paragrafo(doc, texto, align='justify', style='Normal') # Usará Preto
+    """Adiciona a seção '2 OBJETIVO DOS EXAMES' (Texto do Colab)."""
+    # Numeração corrigida para 2.
+    adicionar_paragrafo(doc, "2 OBJETIVO DOS EXAMES", style='TituloPrincipal')
+    # Texto do código Colab original
+    texto = ("Visa esclarecer à autoridade requisitante quanto às características do material apresentado, "
+             "bem como se ele contém substância de uso proscrito no Brasil e capaz de causar dependência física e/ou psíquica. "
+             "O presente laudo pericial busca demonstrar a materialidade da infração penal apurada.")
+    adicionar_paragrafo(doc, texto, align='justify', style='Normal')
 
 def adicionar_exames(doc, subitens_cannabis, subitens_cocaina, dados_laudo):
-    """Adiciona a seção '3 EXAMES'."""
-    adicionar_paragrafo(doc, "3 EXAMES", style='TituloPrincipal') # Usará Azul SPTC
-    adicionar_paragrafo(doc, "Os materiais recebidos foram submetidos aos seguintes exames e testes:", style='Normal', align='justify') # Usará Preto
+    """Adiciona a seção '3 EXAMES' (Texto e lógica do Colab)."""
+    # Numeração corrigida para 3.
+    adicionar_paragrafo(doc, "3 EXAMES", style='TituloPrincipal')
 
     has_cannabis_item = bool(subitens_cannabis)
     has_cocaina_item = bool(subitens_cocaina)
-    itens_outros = [item for item in dados_laudo.get('itens', []) if item.get('tipo_mat') not in ["v", "r", "po", "pd"]]
-    has_outros_item = bool(itens_outros)
-    idx_counter = 1
 
-    if dados_laudo.get('itens'):
-        adicionar_paragrafo(doc, f"3.{idx_counter} Exame macroscópico:", style='TituloSecundario') # Usará Azul SPTC
-        adicionar_paragrafo(doc, "Observação das características gerais do material, como aspecto físico (pó, erva, pedra, etc.), coloração, odor e acondicionamento.", style='Normal', align='justify') # Usará Preto
-        idx_counter += 1
-
+    # Adota a estrutura de subitens do código Colab
+    idx_subitem = 1
     if has_cannabis_item:
-        # Adiciona parágrafo com run específico para itálico
-        p_cannabis = doc.add_paragraph()
-        p_cannabis.style = doc.styles['TituloSecundario'] # Aplica estilo Azul SPTC
-        p_cannabis.add_run(f"3.{idx_counter} Testes para ")
-        run_italic_cannabis = p_cannabis.add_run("Cannabis sativa")
-        run_italic_cannabis.italic = True
-        p_cannabis.add_run(" L.:")
-
-        adicionar_paragrafo(doc, "   a) Reação Duquenois-Levine modificado;", style='Normal') # Preto
-        adicionar_paragrafo(doc, "   b) Reação Fast Blue B Salt;", style='Normal') # Preto
-        adicionar_paragrafo(doc, "   c) Cromatografia em Camada Delgada (CCD) comparativa com padrão de referência.", style='Normal') # Preto
-        idx_counter += 1
+        adicionar_paragrafo(doc, f"3.{idx_subitem} Exames realizados para pesquisa de Cannabis sativa L. (maconha)", style='TituloSecundario')
+        adicionar_paragrafo(doc, f"3.{idx_subitem}.1 Ensaio químico com Fast blue salt B: teste de cor em reação com solução aquosa de sal de azul sólido B em meio alcalino;", style='Normal', align='justify')
+        adicionar_paragrafo(doc, f"3.{idx_subitem}.2 Cromatografia em Camada Delgada (CCD), comparativa com substância padrão, em sistemas contendo eluentes apropriados e posterior revelação com solução aquosa de azul sólido B.", style='Normal', align='justify')
+        idx_subitem += 1
 
     if has_cocaina_item:
-        adicionar_paragrafo(doc, f"3.{idx_counter} Testes para cocaína:", style='TituloSecundario') # Azul SPTC
-        adicionar_paragrafo(doc, "   a) Reação Tiocianato de Cobalto;", style='Normal') # Preto
-        adicionar_paragrafo(doc, "   b) Cromatografia em Camada Delgada (CCD) comparativa com padrão de referência.", style='Normal') # Preto
-        idx_counter += 1
+        adicionar_paragrafo(doc, f"3.{idx_subitem} Exames realizados para pesquisa de cocaína", style='TituloSecundario')
+        adicionar_paragrafo(doc, f"3.{idx_subitem}.1 Ensaio químico com teste de tiocianato de cobalto-reação de cor com solução de tiocianato de cobalto em meio ácido;", style='Normal', align='justify')
+        adicionar_paragrafo(doc, f"3.{idx_subitem}.2 Cromatografia em Camada Delgada (CCD), comparativa com substância padrão, em sistemas com eluentes apropriados e revelação com solução de iodo platinado.", style='Normal', align='justify')
+        idx_subitem += 1
 
-    if has_outros_item:
-        nums_itens_outros = [f"1.{i+1}" for i, item in enumerate(dados_laudo['itens']) if item.get('tipo_mat') not in ["v", "r", "po", "pd"]]
-        desc_itens_str = ", ".join(sorted(nums_itens_outros))
-        label_desc = "no item" if len(nums_itens_outros) == 1 else "nos itens"
-        adicionar_paragrafo(doc, f"3.{idx_counter} Testes para outras substâncias (material {label_desc} {desc_itens_str}):", style='TituloSecundario') # Azul SPTC
-        adicionar_paragrafo(doc, "Realização de testes preliminares de coloração e/ou CCD apropriados para investigação de outras substâncias controladas (Ex: anfetaminas, opiáceos), conforme características observadas no exame macroscópico.", style='Normal', align='justify') # Preto
-        idx_counter += 1
+    # Se nenhum dos dois foi detectado mas há itens, adiciona exame macroscópico
+    if not has_cannabis_item and not has_cocaina_item and dados_laudo.get('itens'):
+        adicionar_paragrafo(doc, f"3.{idx_subitem} Exames realizados", style='TituloSecundario')
+        adicionar_paragrafo(doc, f"3.{idx_subitem}.1 Exame macroscópico;", style='Normal', align='justify')
+        idx_subitem += 1
 
-    if idx_counter == 1 and not dados_laudo.get('itens'):
-         adicionar_paragrafo(doc, "Nenhum material descrito para submissão a exames.", style='Normal') # Preto
+    if idx_subitem == 1: # Se nenhum item foi adicionado
+         adicionar_paragrafo(doc, "Nenhum exame específico a relatar com base nos materiais descritos.", style='Normal')
 
 def adicionar_resultados(doc, subitens_cannabis, subitens_cocaina, dados_laudo):
-    """Adiciona a seção '4 RESULTADOS'."""
-    adicionar_paragrafo(doc, "4 RESULTADOS", style='TituloPrincipal') # Azul SPTC
-    idx_counter = 1
+    """Adiciona a seção '4 RESULTADOS' (Texto e lógica do Colab)."""
+    # Numeração corrigida para 4.
+    adicionar_paragrafo(doc, "4 RESULTADOS", style='TituloPrincipal')
 
-    if subitens_cannabis:
-        desc_itens_nums = sorted(list(subitens_cannabis.values()))
-        desc_itens_str = ", ".join(desc_itens_nums)
-        label_desc = "no item" if len(desc_itens_nums) == 1 else "nos itens"
-        adicionar_paragrafo(doc, f"4.{idx_counter} Para o(s) material(is) descrito(s) {label_desc} {desc_itens_str}:", style='TituloSecundario') # Azul SPTC
+    has_cannabis_item = bool(subitens_cannabis)
+    has_cocaina_item = bool(subitens_cocaina)
+    idx_subitem = 1
 
-        # Parágrafo com itálico
-        p_macro_c = doc.add_paragraph(style='Normal') # Preto
-        p_macro_c.add_run("   a) Exame macroscópico: Material com características compatíveis com ")
-        run_italic_mc = p_macro_c.add_run("Cannabis sativa")
-        run_italic_mc.italic = True
-        p_macro_c.add_run(" L. (odor característico, aspecto de erva picada e prensada ou fragmentos resinosos).")
-        p_macro_c.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    if has_cannabis_item:
+        # Obtém os números dos itens (1.x) associados a Cannabis
+        itens_referencia = sorted(list(subitens_cannabis.values()))
+        refs_str = " e ".join(itens_referencia)
+        label = f"no item {refs_str}" if len(itens_referencia) == 1 else f"nos itens {refs_str}"
+        adicionar_paragrafo(doc, f"4.{idx_subitem} Resultados obtidos para o(s) material(is) descrito(s) {label}:", style='TituloSecundario')
+        adicionar_paragrafo(doc, f"4.{idx_subitem}.1 No ensaio com Fast blue salt B, foram obtidas coloração característica para canabinol e tetrahidrocanabinol (princípios ativos da Cannabis sativa L.).", style='Normal', align='justify')
+        adicionar_paragrafo(doc, f"4.{idx_subitem}.2 Na CCD, obtiveram-se perfis cromatográficos coincidentes com o material de referência (padrão de Cannabis sativa L.); portanto, a substância tetrahidrocanabinol está presente nos materiais questionados.", style='Normal', align='justify')
+        idx_subitem += 1
 
-        adicionar_paragrafo(doc, "   b) Testes químicos (Duquenois-Levine e Fast Blue B Salt): Resultados positivos para a presença de canabinoides.", style='Normal', align='justify') # Preto
-        adicionar_paragrafo(doc, "   c) CCD: Resultado compatível com padrão de referência para Tetrahidrocanabinol (THC).", style='Normal', align='justify') # Preto
-        idx_counter += 1
+    if has_cocaina_item:
+        itens_referencia = sorted(list(subitens_cocaina.values()))
+        refs_str = " e ".join(itens_referencia)
+        label = f"no item {refs_str}" if len(itens_referencia) == 1 else f"nos itens {refs_str}"
+        adicionar_paragrafo(doc, f"4.{idx_subitem} Resultados obtidos para o(s) material(is) descrito(s) {label}:", style='TituloSecundario')
+        adicionar_paragrafo(doc, f"4.{idx_subitem}.1 No teste de tiocianato de cobalto, foram obtidas coloração característica para cocaína;", style='Normal', align='justify')
+        adicionar_paragrafo(doc, f"4.{idx_subitem}.2 Na CCD, obteve-se perfis cromatográficos coincidentes com o material de referência (padrão de cocaína); portanto, a substância cocaína está presente nos materiais questionados.", style='Normal', align='justify')
+        idx_subitem += 1
 
-    if subitens_cocaina:
-        desc_itens_nums = sorted(list(subitens_cocaina.values()))
-        desc_itens_str = ", ".join(desc_itens_nums)
-        label_desc = "no item" if len(desc_itens_nums) == 1 else "nos itens"
-        adicionar_paragrafo(doc, f"4.{idx_counter} Para o(s) material(is) descrito(s) {label_desc} {desc_itens_str}:", style='TituloSecundario') # Azul SPTC
-        adicionar_paragrafo(doc, "   a) Exame macroscópico: Material pulverulento de coloração esbranquiçada ou amarelada, ou material petrificado (\"crack\"), com odor característico.", style='Normal', align='justify') # Preto
-        adicionar_paragrafo(doc, "   b) Teste químico (Tiocianato de Cobalto): Resultado positivo para a presença de cocaína.", style='Normal', align='justify') # Preto
-        adicionar_paragrafo(doc, "   c) CCD: Resultado compatível com padrão de referência para Cocaína.", style='Normal', align='justify') # Preto
-        idx_counter += 1
-
-    itens_outros = [item for i, item in enumerate(dados_laudo.get('itens', [])) if item.get('tipo_mat') not in ["v", "r", "po", "pd"]]
-    if itens_outros:
-        nums_itens_outros = sorted([f"1.{i+1}" for i, item in enumerate(dados_laudo['itens']) if item.get('tipo_mat') not in ["v", "r", "po", "pd"]])
-        desc_itens_str = ", ".join(nums_itens_outros)
-        label_desc = "no item" if len(nums_itens_outros) == 1 else "nos itens"
-        adicionar_paragrafo(doc, f"4.{idx_counter} Para o(s) material(is) descrito(s) {label_desc} {desc_itens_str}:", style='TituloSecundario') # Azul SPTC
-        adicionar_paragrafo(doc, "   a) Exame macroscópico: [Descrever características observadas para estes itens, ex: comprimidos, pó de outra cor, etc.].", style='Normal', align='justify') # Preto
-        adicionar_paragrafo(doc, "   b) Demais testes: [Descrever resultados dos testes aplicados, ex: 'Resultados negativos para as principais substâncias testadas', ou 'Resultado positivo para [outra substância]'].", style='Normal', align='justify') # Preto
-        idx_counter += 1
-
-    if idx_counter == 1 and not dados_laudo.get('itens'):
-        adicionar_paragrafo(doc, "Nenhum material foi submetido a exame, portanto, não há resultados a relatar.", style='Normal', align='justify') # Preto
-    elif idx_counter == 1:
-         adicionar_paragrafo(doc, "Resultados para os itens descritos não puderam ser classificados como Cannabis ou Cocaína com base nos testes padrões aqui listados.", style='Normal', align='justify') # Preto
+    if idx_subitem == 1: # Se nenhum resultado foi adicionado
+        if dados_laudo.get('itens'):
+            adicionar_paragrafo(doc, "Não foram obtidos resultados positivos para Cannabis ou Cocaína nos testes realizados para os materiais descritos.", style='Normal', align='justify')
+        else:
+            adicionar_paragrafo(doc, "Nenhum material foi submetido a exame, portanto, não há resultados a relatar.", style='Normal', align='justify')
 
 
 def adicionar_conclusao(doc, subitens_cannabis, subitens_cocaina, dados_laudo):
-    """Adiciona a seção '5 CONCLUSÃO'."""
-    adicionar_paragrafo(doc, "5 CONCLUSÃO", style='TituloPrincipal') # Azul SPTC
+    """Adiciona a seção '5 CONCLUSÃO' (Texto e lógica do Colab)."""
+    # Numeração corrigida para 5.
+    adicionar_paragrafo(doc, "5 CONCLUSÃO", style='TituloPrincipal')
 
     conclusoes = []
-    ref_legal = ("substância(s) de uso proscrito no Brasil, conforme a Portaria SVS/MS nº 344/1998 e suas atualizações")
-
     if subitens_cannabis:
-        desc_itens_nums = sorted(list(subitens_cannabis.values()))
-        desc_str = ", ".join(desc_itens_nums)
-        label_desc = "no material descrito no item" if len(desc_itens_nums) == 1 else "nos materiais descritos nos itens"
-        # Conclusão com run para itálico
-        concl_cannabis_text = f"{label_desc} {desc_str}, foi detectada a presença de Tetrahidrocanabinol (THC), princípio ativo da Cannabis sativa L. (maconha), {ref_legal}"
-        # Adicionar parágrafo e runs manualmente se precisar de itálico aqui, ou usar aplicar_italico_especifico no final
-        conclusoes.append(concl_cannabis_text) # Adiciona texto normal por enquanto
+        itens_referencia = sorted(list(subitens_cannabis.values()))
+        refs_str = " e ".join(itens_referencia)
+        label = f"no item {refs_str}" if len(itens_referencia) == 1 else f"nos itens {refs_str}"
+        conclusoes.append(f"no(s) material(is) descrito(s) {label}, foi detectada a presença de partes "
+                           f"da planta Cannabis sativa L., vulgarmente conhecida por maconha. A Cannabis sativa L. contém princípios ativos chamados canabinóis, dentre os quais se encontra o tetrahidrocanabinol, substância perturbadora do sistema nervoso central. "
+                           f"Tanto a Cannabis sativa L. quanto a tetrahidrocanabinol são proscritas no país, com fulcro na Portaria nº 344/1998, atualizada por meio da RDC nº 970, de 19/03/2025, da Anvisa.") # Data da RDC do código Colab
 
     if subitens_cocaina:
-        desc_itens_nums = sorted(list(subitens_cocaina.values()))
-        desc_str = ", ".join(desc_itens_nums)
-        label_desc = "no material descrito no item" if len(desc_itens_nums) == 1 else "nos materiais descritos nos itens"
-        conclusoes.append(f"{label_desc} {desc_str}, foi detectada a presença de Cocaína, {ref_legal}")
-
-    itens_outros = [item for i, item in enumerate(dados_laudo.get('itens', [])) if item.get('tipo_mat') not in ["v", "r", "po", "pd"]]
-    if itens_outros:
-        nums_itens_outros = sorted([f"1.{i+1}" for i, item in enumerate(dados_laudo['itens']) if item.get('tipo_mat') not in ["v", "r", "po", "pd"]])
-        desc_str = ", ".join(nums_itens_outros)
-        label_desc = "no material descrito no item" if len(nums_itens_outros) == 1 else "nos materiais descritos nos itens"
-        conclusoes.append(f"{label_desc} {desc_str}, [concluir sobre a presença de outras substâncias controladas ou indicar resultado negativo para as substâncias pesquisadas]")
+        itens_referencia = sorted(list(subitens_cocaina.values()))
+        refs_str = " e ".join(itens_referencia)
+        label = f"no item {refs_str}" if len(itens_referencia) == 1 else f"nos itens {refs_str}" # Ajuste na descrição (era 'no(s) subitem(ns)')
+        conclusoes.append(f"no(s) material(is) descrito(s) {label}, foi detectada a presença de cocaína, substância alcaloide estimulante do sistema nervoso central. A cocaína é proscrita no país, com fulcro na Portaria nº 344/1998, atualizada por meio da RDC nº 970, de 19/03/2025, da Anvisa.") # Data da RDC do código Colab
 
     if conclusoes:
-        texto_final = "Face ao exposto e com base nos resultados obtidos nos exames realizados, conclui-se que "
-        if len(conclusoes) > 1:
-            texto_final += "; ".join(conclusoes[:-1]) + "; e " + conclusoes[-1] + "."
-        else:
-            texto_final += conclusoes[0] + "."
-    elif dados_laudo.get('itens'):
-        # Conclusão negativa com itálico
-        texto_final = ("Face ao exposto e com base nos resultados obtidos nos exames realizados, conclui-se que "
-                       "não foram detectadas as substâncias Cannabis sativa L. (maconha) ou Cocaína nos materiais examinados.")
-    else:
+        # Junta as conclusões com "Outrossim," como no código Colab
+        texto_final = "A partir das análises realizadas, conclui-se que, " + " Outrossim, ".join(conclusoes)
+    elif dados_laudo.get('itens'): # Se houve itens mas sem resultado positivo
+        texto_final = "A partir das análises realizadas, conclui-se que não foram detectadas substâncias de uso proscrito nos materiais analisados."
+    else: # Se não houve itens
         texto_final = "Não houve material submetido a exame, portanto, não há conclusões a apresentar."
 
-    # Adiciona o parágrafo de conclusão (itálico será aplicado depois)
-    adicionar_paragrafo(doc, texto_final, align='justify', style='Normal') # Preto
+    adicionar_paragrafo(doc, texto_final, align='justify', style='Normal')
 
 def adicionar_custodia_material(doc, dados_laudo):
-    """Adiciona a seção '6 CUSTÓDIA DO MATERIAL'."""
-    adicionar_paragrafo(doc, "6 CUSTÓDIA DO MATERIAL", style='TituloPrincipal') # Azul SPTC
-    adicionar_paragrafo(doc, "6.1 Contraprova:", style='TituloSecundario') # Azul SPTC
+    """Adiciona a seção '6 CUSTÓDIA DO MATERIAL' (Texto do Colab, com Lacre do input)."""
+    # Numeração corrigida para 6.
+    adicionar_paragrafo(doc, "6 CUSTÓDIA DO MATERIAL", style='TituloPrincipal')
+    adicionar_paragrafo(doc, "6.1 Contraprova", style='TituloSecundario') # Usar TituloSecundario para subitem
 
-    lacre_placeholder = '_____________'
-    texto_contraprova = (f"A(s) amostra(s) para eventual contraprova foi(foram) devidamente acondicionada(s) "
-                         f"e lacrada(s) novamente com o lacre nº {lacre_placeholder}, encontrando-se à disposição "
-                         "da autoridade competente ou da justiça, arquivada(s) neste Instituto.")
-    adicionar_paragrafo(doc, texto_contraprova, style='Normal', align='justify') # Preto
+    # Pega o lacre do estado da sessão (que veio do input do Streamlit)
+    lacre = dados_laudo.get('lacre', '_______') # Usa placeholder se não informado
+
+    # Texto adaptado do código Colab
+    texto_contraprova = (f"A amostra contraprova ficará armazenada neste Instituto, conforme Portaria 0003/2019/SSP "
+                         f"(Lacre nº {lacre}).")
+    adicionar_paragrafo(doc, texto_contraprova, style='Normal', align='justify')
 
 def adicionar_referencias(doc, subitens_cannabis, subitens_cocaina):
-    """Adiciona a seção 'REFERÊNCIAS'."""
-    adicionar_paragrafo(doc, "REFERÊNCIAS", style='TituloPrincipal') # Azul SPTC
-    adicionar_paragrafo(doc, "BRASIL. Ministério da Saúde. Agência Nacional de Vigilância Sanitária. Portaria SVS/MS nº 344, de 12 de maio de 1998. Aprova o Regulamento Técnico sobre substâncias e medicamentos sujeitos a controle especial. Diário Oficial da União, Brasília, DF, 15 maio 1998. (e suas atualizações).", style='Normal', align='justify', size=10) # Preto, menor
-    adicionar_paragrafo(doc, "GOIÁS. Secretaria de Estado da Segurança Pública. Superintendência de Polícia Técnico-Científica. Procedimento Operacional Padrão – Química Forense (POP-QUIM).", style='Normal', align='justify', size=10) # Preto, menor
-    # A data de acesso deve ser atualizada ou removida se não for dinâmica
-    hoje_ref = datetime.now().strftime('%d/%m/%Y')
-    adicionar_paragrafo(doc, f"SCIENTIFIC WORKING GROUP FOR THE ANALYSIS OF SEIZED DRUGS (SWGDRUG). Recommendations. Version 8.0. Disponível em: <www.swgdrug.org>. Acesso em: {hoje_ref}.", style='Normal', align='justify', size=10) # Preto, menor
+    """Adiciona a seção 'REFERÊNCIAS' (Texto e lógica do Colab)."""
+    adicionar_paragrafo(doc, "REFERÊNCIAS", style='TituloPrincipal')
+    # Tamanho da fonte menor para referências
+    tamanho_ref = 10
+
+    referencias_base = [
+        "BRASIL. Ministério da Saúde. Portaria SVS/MS n° 344, de 12 de maio de 1998. Aprova o regulamento técnico sobre substâncias e medicamentos sujeitos a controle especial. Diário Oficial da União: Brasília, DF, p. 37, 19 maio 1998. Alterada pela RDC nº 970, de 19/03/2025.", # Data da RDC do Colab
+        "GOIÁS. Secretaria de Estado da Segurança Pública. Portaria nº 0003/2019/SSP de 10 de janeiro de 2019. Regulamenta a apreensão, movimentação, exames, acondicionamento, armazenamento e destruição de drogas no âmbito da Secretaria de Estado da Segurança Pública. Diário Oficial do Estado de Goiás: n° 22.972, Goiânia, GO, p. 4-5, 15 jan. 2019.",
+        "SWGDRUG: Scientific Working Group for the Analysis of Seized Drugs. Recommendations. Version 8.0 june. 2019. Disponível em: http://www.swgdrug.org/Documents/SWGDRUG%20Recommendations%20Version%208_FINAL_ForPosting_092919.pdf. Acesso em: 07/10/2019." # Data de acesso fixa do código Colab
+    ]
+
+    for ref in referencias_base:
+        adicionar_paragrafo(doc, ref, style='Normal', align='justify', size=tamanho_ref)
 
     if subitens_cannabis:
-        adicionar_paragrafo(doc, "UNITED NATIONS OFFICE ON DRUGS AND CRIME (UNODC). Recommended methods for the identification and analysis of cannabis and cannabis products. Manual for Use by National Drug Analysis Laboratories. New York: UN, 2009.", style='Normal', align='justify', size=10) # Preto, menor
+        adicionar_paragrafo(doc, "UNODC (United Nations Office on Drugs and Crime). Laboratory and scientific section. Recommended Methods for the Identification and Analysis of Cannabis and Cannabis Products. New York: 2012.", style='Normal', align='justify', size=tamanho_ref) # Ano ajustado para 2012 como no Colab v2
     if subitens_cocaina:
-        adicionar_paragrafo(doc, "UNITED NATIONS OFFICE ON DRUGS AND CRIME (UNODC). Recommended methods for the identification and analysis of cocaine in seized materials. Manual for Use by National Drug Analysis Laboratories. New York: UN, 2012.", style='Normal', align='justify', size=10) # Preto, menor
+        adicionar_paragrafo(doc, "UNODC (United Nations Office on Drugs and Crime). Laboratory and Scientific Section. Recommended Methods for the Identification and Analysis of Cocaine in Seized Materials. New York: 2012.", style='Normal', align='justify', size=tamanho_ref)
 
 def adicionar_encerramento_assinatura(doc):
-    """Adiciona a frase de encerramento, data, local e a assinatura do perito."""
-    adicionar_paragrafo(doc, "\nÉ o laudo. Nada mais havendo a lavrar, encerra-se o presente.", style='Normal', align='justify') # Preto
+    """Adiciona a frase de encerramento, data, local e a assinatura do perito (formato Colab)."""
+    # Frase de encerramento pode ser omitida ou adaptada se preferir o "É o laudo."
+    # adicionar_paragrafo(doc, "\nÉ o laudo. Nada mais havendo a lavrar, encerra-se o presente.", style='Normal', align='justify')
 
     try:
         brasilia_tz = pytz.timezone('America/Sao_Paulo')
         hoje = datetime.now(brasilia_tz)
     except Exception:
-        hoje = datetime.now()
-    data_formatada = f"Goiânia, {hoje.day} de {meses_portugues.get(hoje.month, 'MêsInválido')} de {hoje.year}."
+        hoje = datetime.now() # Fallback
+    mes_atual = meses_portugues.get(hoje.month, f"Mês {hoje.month}")
+    # Formato da data e local do código Colab
+    data_formatada = f"Goiânia, {hoje.day} de {mes_atual} de {hoje.year}."
 
-    doc.add_paragraph()
-    adicionar_paragrafo(doc, data_formatada, align='center', style='Normal') # Preto
-    doc.add_paragraph(); doc.add_paragraph()
+    doc.add_paragraph() # Espaço
+    adicionar_paragrafo(doc, data_formatada, align='right', style='Normal') # Alinhado à direita como no Colab
 
-    adicionar_paragrafo(doc, "________________________________________", align='center', style='Normal') # Preto
-    adicionar_paragrafo(doc, "NOME DO PERITO CRIMINAL", align='center', style='Normal', bold=True) # Preto
-    adicionar_paragrafo(doc, "Perito Criminal - SPTC/GO", align='center', style='Normal') # Preto
-    adicionar_paragrafo(doc, "Matrícula nº XXXXXXX", align='center', style='Normal') # Preto
+    doc.add_paragraph(); doc.add_paragraph() # Mais espaço
 
-def aplicar_italico_especifico(doc):
-    """Aplica estilo itálico a termos científicos e latinos específicos no documento."""
-    termos_italico = ['Cannabis sativa', 'Cannabis sativa L.', 'Tetrahidrocanabinol', 'THC']
-    expressoes_latinas = ['et al.', 'i.e.', 'e.g.', 'supra', 'infra', 'in vitro', 'in vivo', 'a priori', 'a posteriori']
-    termos_completos = termos_italico + expressoes_latinas
-    regex_pattern = r"(?:^|\W)(" + "|".join(re.escape(termo) for termo in termos_completos) + r")($|\W)"
+    # Assinatura - Usando o formato/texto do Colab
+    adicionar_paragrafo(doc, "Laudo assinado digitalmente com dados do assinador à esquerda das páginas", align='left', style='Normal', size=9, italic=True) # Nota sobre assinatura digital
+    adicionar_paragrafo(doc, "________________________________________", align='center', style='Normal')
+    adicionar_paragrafo(doc, "Daniel Chendes Lima", align='center', style='Normal', bold=True) # Nome do Perito do Colab
+    adicionar_paragrafo(doc, "Perito Criminal", align='center', style='Normal') # Cargo do Colab
+    # Adicionar Matrícula se desejar/tiver
+    # adicionar_paragrafo(doc, "Matrícula nº XXXXXXX", align='center', style='Normal')
+
+def aplicar_italico_fonte_original(doc):
+    """Aplica fonte Gadugi e itálico a termos específicos, como no código Colab original."""
+    termos_para_italico = TERMOS_ITALICO_ORIGINAL
 
     for paragraph in doc.paragraphs:
-        if not any(termo in paragraph.text for termo in termos_completos):
-            continue
+        # Verifica se o parágrafo é a legenda da ilustração para usar tamanho 10
+        is_ilustracao = "Ilustração 1:" in paragraph.text and paragraph.style.name == 'Ilustracao'
+        tamanho_fonte = Pt(10) if is_ilustracao else Pt(12)
 
-        # Preserva runs existentes se houver múltiplas formatações no parágrafo
-        runs_originais = list(paragraph.runs)
-        texto_original_completo = paragraph.text # Pega o texto completo antes de limpar
+        full_text = paragraph.text
+        if not full_text: continue # Pula parágrafos vazios
 
-        # Salva formatação do parágrafo
+        # Limpa o parágrafo preservando a formatação original (alinhamento, estilo)
         original_alignment = paragraph.alignment
         original_style = paragraph.style
         paragraph.clear()
         paragraph.alignment = original_alignment
         paragraph.style = original_style
 
-        last_index = 0
-        for match in re.finditer(regex_pattern, texto_original_completo):
-            start, end = match.span(1)
-            termo_encontrado = match.group(1)
+        idx = 0
+        while idx < len(full_text):
+            match_found = False
+            # Procura pelo termo mais longo primeiro para evitar correspondências parciais
+            # Ordena por comprimento descendente
+            termos_ordenados = sorted(termos_para_italico, key=len, reverse=True)
+            for phrase in termos_ordenados:
+                # Verifica se o termo começa na posição atual
+                # Adiciona espaço/início de string antes e espaço/fim de string depois para evitar subpalavras (simplificado)
+                # Melhor seria usar regex com word boundaries, mas mantendo a lógica simples do Colab:
+                if full_text[idx:].startswith(phrase):
+                    # Verifica se é uma palavra completa (simplificado)
+                    ends_correctly = (idx + len(phrase) == len(full_text)) or (not full_text[idx + len(phrase)].isalnum())
+                    starts_correctly = (idx == 0) or (not full_text[idx-1].isalnum())
 
-            if start > last_index:
-                 # Adiciona texto normal antes do termo, tentando preservar formatação original
-                 # (Simplificação: assume formatação uniforme do parágrafo)
-                 run_normal = paragraph.add_run(texto_original_completo[last_index:start])
-                 # TODO: Idealmente, copiar formatação do run original correspondente
+                    if ends_correctly and starts_correctly:
+                        run = paragraph.add_run(phrase)
+                        run.font.name = 'Gadugi'
+                        run.font.size = tamanho_fonte
+                        run.italic = True # Aplica itálico
+                        idx += len(phrase)
+                        match_found = True
+                        break # Sai do loop de termos e continua varrendo o texto
 
-            run_italic = paragraph.add_run(termo_encontrado)
-            run_italic.italic = True
-            # TODO: Idealmente, copiar outra formatação (bold, size, etc.) do run original
+            # Se nenhum termo em itálico foi encontrado começando em 'idx'
+            if not match_found:
+                run = paragraph.add_run(full_text[idx])
+                run.font.name = 'Gadugi'
+                run.font.size = tamanho_fonte
+                run.italic = False # Garante que não seja itálico por padrão
+                idx += 1
 
-            last_index = end
-
-        if last_index < len(texto_original_completo):
-            run_normal = paragraph.add_run(texto_original_completo[last_index:])
-            # TODO: Copiar formatação
-
-        # Se o parágrafo ficou vazio (talvez erro na lógica?), restaura o texto original
-        if not paragraph.text and texto_original_completo:
-            paragraph.text = texto_original_completo
+        # Se o parágrafo ficou vazio após o processo (pouco provável), restaura o texto original
+        if not paragraph.text and full_text:
+             paragraph.text = full_text
 
 
 # --- Função Principal de Geração do DOCX ---
 
 def gerar_laudo_docx(dados_laudo):
-    """Gera o laudo completo em formato docx (foco nos itens)."""
+    """Gera o laudo completo em formato docx."""
     document = Document()
-    configurar_estilos(document) # Configura estilos COM as cores SPTC
+    configurar_estilos(document) # Configura estilos COM fonte Gadugi e cores SPTC
     configurar_pagina(document)
     adicionar_cabecalho_rodape(document)
 
-    # Adiciona Seções na Ordem Correta
+    # Adiciona Seções na Ordem Correta usando as funções modificadas
     subitens_cannabis, subitens_cocaina = adicionar_material_recebido(document, dados_laudo)
     adicionar_objetivo_exames(document)
     adicionar_exames(document, subitens_cannabis, subitens_cocaina, dados_laudo)
     adicionar_resultados(document, subitens_cannabis, subitens_cocaina, dados_laudo)
     adicionar_conclusao(document, subitens_cannabis, subitens_cocaina, dados_laudo)
-    adicionar_custodia_material(document, dados_laudo)
+    adicionar_custodia_material(document, dados_laudo) # Passa dados_laudo para pegar o lacre
     adicionar_referencias(document, subitens_cannabis, subitens_cocaina)
     adicionar_encerramento_assinatura(document)
 
-    # Aplica itálico (depois de todo o texto ser adicionado)
-    aplicar_italico_especifico(document)
+    # Aplica fonte Gadugi e itálico usando o método do código Colab original
+    aplicar_italico_fonte_original(document)
 
     return document
 
 # --- Interface Streamlit ---
 def main():
-    st.set_page_config(layout="wide", page_title="Gerador de Laudo - Itens")
+    st.set_page_config(layout="wide", page_title="Gerador de Laudo - Combinado")
 
-    # --- Cabeçalho com Logo, Título, Data --- (Hora removida, Cores e Logo ajustados)
-    col1, col2, col3 = st.columns([1, 4, 2]) # Ajuste proporção se necessário
+    # --- Cabeçalho com Logo, Título, Data --- (Cores SPTC)
+    col1, col2, col3 = st.columns([1, 4, 2])
 
-    # Define cores institucionais (para uso na interface Streamlit)
     UI_COR_AZUL_SPTC = "#00478F"
     UI_COR_CINZA_SPTC = "#6E6E6E"
 
     with col1:
-        logo_path = "logo_policia_cientifica.png" # Caminho para o logo local
+        logo_path = "logo_policia_cientifica.png"
         try:
-            # Tenta carregar o logo local e aumenta o tamanho
-            st.image(logo_path, width=150) # Logo maior
+            st.image(logo_path, width=150)
         except FileNotFoundError:
-            # Erro se o arquivo local NÃO for encontrado (removido fallback de URL)
-            st.error(f"Erro: Arquivo do logo '{logo_path}' não encontrado no diretório.")
-            st.info("Certifique-se de que o arquivo do logo está na mesma pasta que o script ou no repositório GitHub.")
+            st.error(f"Erro: Logo '{logo_path}' não encontrado.")
+            st.info("Coloque 'logo_policia_cientifica.png' na mesma pasta do script.")
         except Exception as e:
-            st.warning(f"Logo não pôde ser carregado: {e}")
+            st.warning(f"Logo não carregado: {e}")
 
     with col2:
-        # Usa markdown para aplicar a cor azul institucional ao título
         st.markdown(f'<h1 style="color: {UI_COR_AZUL_SPTC};">Gerador de Laudo Pericial</h1>', unsafe_allow_html=True)
-        # Usa markdown para aplicar a cor cinza institucional ao caption
-        st.markdown(f'<p style="color: {UI_COR_CINZA_SPTC}; font-size: 0.9em;">Identificação de Drogas - Foco nos Itens - SPTC/GO</p>', unsafe_allow_html=True)
+        st.markdown(f'<p style="color: {UI_COR_CINZA_SPTC}; font-size: 0.9em;">Identificação de Drogas - SPTC/GO (Versão Combinada)</p>', unsafe_allow_html=True)
 
     with col3:
-        data_placeholder = st.empty() # Placeholder apenas para a data agora
-
-        # Função para atualizar data (sem hora)
+        data_placeholder = st.empty()
         def atualizar_data():
             try:
                 brasilia_tz = pytz.timezone('America/Sao_Paulo')
                 now = datetime.now(brasilia_tz)
                 dia_semana = dias_semana_portugues.get(now.weekday(), '')
                 mes = meses_portugues.get(now.month, '')
-                # Formata apenas a data
                 data_formatada = f"{dia_semana}, {now.day} de {mes} de {now.year}"
-
-                # Usa HTML/Markdown para formatação, aplicando a cor cinza institucional
                 data_placeholder.markdown(f"""
                 <div style="text-align: right; font-size: 0.9em; color: {UI_COR_CINZA_SPTC}; line-height: 1.2; margin-top: 10px;">
-                    <span>{data_formatada}</span>
-                    <br>
+                    <span>{data_formatada}</span><br>
                     <span style="font-size: 0.8em;">(Goiânia-GO)</span>
-                </div>
-                """, unsafe_allow_html=True) # Adicionado referência local/fuso horário
+                </div>""", unsafe_allow_html=True)
             except Exception as e:
                 now = datetime.now()
-                fallback_str = now.strftime("%d/%m/%Y") # Formato de data fallback
+                fallback_str = now.strftime("%d/%m/%Y")
                 data_placeholder.markdown(f"""
                 <div style="text-align: right; font-size: 0.9em; color: #FF5555; line-height: 1.2; margin-top: 10px;">
                     <span>{fallback_str} (Local)</span><br>
                     <span style="font-size: 0.8em;">Erro Fuso Horário: {e}</span>
-                </div>
-                """, unsafe_allow_html=True)
+                </div>""", unsafe_allow_html=True)
+        atualizar_data()
 
-        atualizar_data() # Atualiza na carga inicial
+    st.markdown("---")
 
-    st.markdown("---") # Divisor visual
-
-    # --- REMOVIDA A SEÇÃO DE INFORMAÇÕES GERAIS ---
-
-    # --- Inicialização do Estado da Sessão (Ajustada) ---
+    # --- Inicialização do Estado da Sessão (Adicionado lacre e rg_pericia) ---
     if 'dados_laudo' not in st.session_state:
         st.session_state.dados_laudo = {
+            'rg_pericia': '', # Adicionado
+            'lacre': '',      # Adicionado
             'itens': [],
             'imagem': None
         }
-    if 'itens' not in st.session_state.dados_laudo:
-        st.session_state.dados_laudo['itens'] = []
-    if 'imagem' not in st.session_state.dados_laudo:
-        st.session_state.dados_laudo['imagem'] = None
-    if not isinstance(st.session_state.dados_laudo.get('itens'), list):
-         st.session_state.dados_laudo['itens'] = []
+    # Garante que as chaves existem mesmo se o estado já foi inicializado antes
+    if 'rg_pericia' not in st.session_state.dados_laudo: st.session_state.dados_laudo['rg_pericia'] = ''
+    if 'lacre' not in st.session_state.dados_laudo: st.session_state.dados_laudo['lacre'] = ''
+    if 'itens' not in st.session_state.dados_laudo: st.session_state.dados_laudo['itens'] = []
+    if 'imagem' not in st.session_state.dados_laudo: st.session_state.dados_laudo['imagem'] = None
+    if not isinstance(st.session_state.dados_laudo.get('itens'), list): st.session_state.dados_laudo['itens'] = []
 
-    # --- Coleta de Dados para o Laudo (Foco nos Itens) ---
-    st.header("MATERIAL RECEBIDO PARA EXAME")
+
+    # --- Inputs Gerais (RG Perícia e Lacre) ---
+    st.header("Informações Gerais")
+    col_geral1, col_geral2 = st.columns(2)
+    with col_geral1:
+        st.session_state.dados_laudo['rg_pericia'] = st.text_input(
+            "RG da Perícia (para nome do arquivo)",
+            value=st.session_state.dados_laudo['rg_pericia'],
+            key="rg_pericia_input",
+            help="Ex: 2025_04_12345. Será usado para nomear o arquivo .docx."
+        )
+    with col_geral2:
+        st.session_state.dados_laudo['lacre'] = st.text_input(
+            "Número do Lacre da Contraprova",
+            value=st.session_state.dados_laudo['lacre'],
+            key="lacre_input",
+            help="Informe o número do lacre que será usado na contraprova."
+        )
+
+    st.markdown("---")
+
+    # --- Coleta de Dados para o Laudo (Itens) ---
+    st.header("1 MATERIAL RECEBIDO PARA EXAME")
 
     numero_itens = st.number_input(
         "Número de tipos diferentes de material/acondicionamento a descrever",
@@ -752,12 +741,10 @@ def main():
         value=max(0, len(st.session_state.dados_laudo.get('itens', []))),
         step=1,
         key="num_itens_input",
-        help="Informe quantos grupos distintos de material (com mesma embalagem, cor, etc.) você recebeu. Ex: 5 eppendorfs azuis contendo pó = 1 item; 3 porções em plástico transparente = 1 item."
+        help="Informe quantos grupos distintos de material você recebeu."
     )
 
     # --- Lógica para adicionar/remover itens no estado da sessão ---
-    if not isinstance(st.session_state.dados_laudo.get('itens'), list):
-        st.session_state.dados_laudo['itens'] = []
     current_num_itens_in_state = len(st.session_state.dados_laudo['itens'])
     if numero_itens > current_num_itens_in_state:
         for _ in range(numero_itens - current_num_itens_in_state):
@@ -773,31 +760,35 @@ def main():
     if numero_itens > 0:
         st.markdown("---")
         for i in range(numero_itens):
-            with st.expander(f"Detalhes do Item {i + 1}", expanded=True):
-                item_key_prefix = f"item_{i}_"
+            # Usar número do item 1.x na interface
+            with st.expander(f"Detalhes do Item 1.{i + 1}", expanded=True):
+                item_key_prefix = f"item_{i}_" # Chave única para widgets Streamlit
                 cols_item1 = st.columns([1, 3, 3])
                 with cols_item1[0]:
+                    # Garante que qtd é int antes de usar no widget
                     if not isinstance(st.session_state.dados_laudo['itens'][i].get('qtd'), int):
                         st.session_state.dados_laudo['itens'][i]['qtd'] = 1
                     st.session_state.dados_laudo['itens'][i]['qtd'] = st.number_input(
-                        "Qtd", min_value=1,
+                        f"Qtd (Item 1.{i+1})", min_value=1,
                         value=st.session_state.dados_laudo['itens'][i]['qtd'],
                         step=1, key=item_key_prefix + "qtd",
                         help="Número de unidades deste item (ex: 5 eppendorfs)")
                 with cols_item1[1]:
+                    # Garante que tipo_mat existe e é válido
                     if st.session_state.dados_laudo['itens'][i].get('tipo_mat') not in TIPOS_MATERIAL_BASE:
                          st.session_state.dados_laudo['itens'][i]['tipo_mat'] = list(TIPOS_MATERIAL_BASE.keys())[0]
                     st.session_state.dados_laudo['itens'][i]['tipo_mat'] = st.selectbox(
-                        "Material", options=list(TIPOS_MATERIAL_BASE.keys()),
+                        f"Material (Item 1.{i+1})", options=list(TIPOS_MATERIAL_BASE.keys()),
                         format_func=lambda x: f"{x.upper()} ({TIPOS_MATERIAL_BASE.get(x, '?')})",
                         index=list(TIPOS_MATERIAL_BASE.keys()).index(st.session_state.dados_laudo['itens'][i]['tipo_mat']),
                         key=item_key_prefix + "tipo_mat",
                         help="Selecione o aspecto principal do material.")
                 with cols_item1[2]:
+                     # Garante que emb existe e é válido
                     if st.session_state.dados_laudo['itens'][i].get('emb') not in TIPOS_EMBALAGEM_BASE:
                          st.session_state.dados_laudo['itens'][i]['emb'] = list(TIPOS_EMBALAGEM_BASE.keys())[0]
                     st.session_state.dados_laudo['itens'][i]['emb'] = st.selectbox(
-                        "Embalagem", options=list(TIPOS_EMBALAGEM_BASE.keys()),
+                        f"Embalagem (Item 1.{i+1})", options=list(TIPOS_EMBALAGEM_BASE.keys()),
                         format_func=lambda x: f"{x.upper()} ({TIPOS_EMBALAGEM_BASE.get(x, '?')})",
                         index=list(TIPOS_EMBALAGEM_BASE.keys()).index(st.session_state.dados_laudo['itens'][i]['emb']),
                         key=item_key_prefix + "emb",
@@ -806,35 +797,41 @@ def main():
                 cols_item2 = st.columns([2, 2, 3])
                 with cols_item2[0]:
                     embalagem_selecionada = st.session_state.dados_laudo['itens'][i]['emb']
+                    # Habilita cor para mais tipos, como no código Colab
                     if embalagem_selecionada in ['pl', 'pa', 'e', 'z']:
+                        # Garante que cor_emb existe
                         if 'cor_emb' not in st.session_state.dados_laudo['itens'][i]:
                              st.session_state.dados_laudo['itens'][i]['cor_emb'] = None
                         opcoes_cor = {None: " - Selecione - "}
                         opcoes_cor.update({k: v.capitalize() for k, v in CORES_FEMININO_EMBALAGEM.items()})
                         current_cor_key = st.session_state.dados_laudo['itens'][i]['cor_emb']
+                        # Garante que a chave atual existe nas opções
                         try: cor_index = list(opcoes_cor.keys()).index(current_cor_key)
-                        except ValueError: cor_index = 0
+                        except ValueError: cor_index = 0 ; st.session_state.dados_laudo['itens'][i]['cor_emb'] = None # Reseta se inválido
+
                         st.session_state.dados_laudo['itens'][i]['cor_emb'] = st.selectbox(
-                            "Cor Embalagem", options=list(opcoes_cor.keys()),
+                            f"Cor Emb. (Item 1.{i+1})", options=list(opcoes_cor.keys()),
                             format_func=lambda x: opcoes_cor[x], index=cor_index,
                             key=item_key_prefix + "cor_emb",
                             help="Selecione a cor da embalagem, se houver e for relevante."
                         )
                     else:
-                        st.text_input("Cor Embalagem", value="N/A", key=item_key_prefix + "cor_emb_disabled", disabled=True, help="Cor não aplicável para este tipo de embalagem.")
-                        st.session_state.dados_laudo['itens'][i]['cor_emb'] = None
+                        st.text_input(f"Cor Emb. (Item 1.{i+1})", value="N/A", key=item_key_prefix + "cor_emb_disabled", disabled=True, help="Cor não aplicável para este tipo de embalagem.")
+                        st.session_state.dados_laudo['itens'][i]['cor_emb'] = None # Garante que cor é None
                 with cols_item2[1]:
+                    # Garante que ref existe
                     if 'ref' not in st.session_state.dados_laudo['itens'][i]: st.session_state.dados_laudo['itens'][i]['ref'] = ''
                     st.session_state.dados_laudo['itens'][i]['ref'] = st.text_input(
-                        "Ref. Constatação", value=st.session_state.dados_laudo['itens'][i]['ref'],
+                        f"Ref. Constatação (Item 1.{i+1})", value=st.session_state.dados_laudo['itens'][i]['ref'],
                         key=item_key_prefix + "ref",
-                        help="Informe o número do subitem correspondente no Laudo de Constatação, se houver (ex: 1.1, 2.3).")
+                        help="Subitem correspondente no Laudo de Constatação (ex: 1.1).")
                 with cols_item2[2]:
+                    # Garante que pessoa existe
                     if 'pessoa' not in st.session_state.dados_laudo['itens'][i]: st.session_state.dados_laudo['itens'][i]['pessoa'] = ''
                     st.session_state.dados_laudo['itens'][i]['pessoa'] = st.text_input(
-                        "Pessoa Relacionada", value=st.session_state.dados_laudo['itens'][i]['pessoa'],
+                        f"Pessoa Relacionada (Item 1.{i+1})", value=st.session_state.dados_laudo['itens'][i]['pessoa'],
                         key=item_key_prefix + "pessoa",
-                        help="(Opcional) Nome da pessoa a quem este material estava associado, se informado.")
+                        help="(Opcional) Nome da pessoa associada a este material.")
                 st.markdown("---", unsafe_allow_html=False)
 
     st.markdown("---")
@@ -845,38 +842,47 @@ def main():
         "Carregar imagem do(s) material(is) recebido(s)",
         type=["png", "jpg", "jpeg", "bmp", "gif"],
         key="image_uploader",
-        help="Faça o upload de uma imagem que mostre os materiais recebidos. Será incluída na Seção 1."
+        help="Faça o upload de uma imagem. Será incluída na Seção 1."
         )
+    # Atualiza estado da imagem
     if uploaded_image is not None:
         st.session_state.dados_laudo['imagem'] = uploaded_image
-    else:
-        if 'image_uploader' in st.session_state and st.session_state.image_uploader is None:
-             st.session_state.dados_laudo['imagem'] = None
+    # Detecta se o usuário removeu a imagem
+    elif 'image_uploader' in st.session_state and st.session_state.image_uploader is None:
+         st.session_state.dados_laudo['imagem'] = None
+
 
     # --- Botão de Geração e Download ---
     st.markdown("---")
     st.header("Gerar e Baixar Laudo")
 
     if st.button("📊 Gerar Laudo (.docx)"):
-        with st.spinner("Gerando documento... Por favor, aguarde."):
-            try:
-                document = gerar_laudo_docx(st.session_state.dados_laudo)
-                doc_io = io.BytesIO()
-                document.save(doc_io)
-                doc_io.seek(0)
-                now_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-                file_name = f"Laudo_Drogas_{now_str}.docx"
-                st.download_button(
-                    label="✅ Download do Laudo Concluído!", data=doc_io,
-                    file_name=file_name,
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    key="download_button"
-                )
-                st.success("Laudo gerado com sucesso! Clique no botão acima para baixar.")
-            except Exception as e:
-                st.error(f"❌ Ocorreu um erro ao gerar o laudo:")
-                st.exception(e)
-                print(f"Erro detalhado na geração do DOCX: {e}\n{traceback.format_exc()}")
+        # Validação simples: Verifica se RG da Perícia foi preenchido
+        rg_pericia = st.session_state.dados_laudo.get('rg_pericia', '').strip()
+        if not rg_pericia:
+            st.warning("⚠️ Por favor, informe o RG da Perícia para gerar o nome do arquivo.")
+        else:
+            with st.spinner("Gerando documento... Por favor, aguarde."):
+                try:
+                    document = gerar_laudo_docx(st.session_state.dados_laudo)
+                    doc_io = io.BytesIO()
+                    document.save(doc_io)
+                    doc_io.seek(0)
+
+                    # Usa o RG da Perícia para o nome do arquivo
+                    file_name = f"{rg_pericia}.docx"
+
+                    st.download_button(
+                        label=f"✅ Download Laudo ({file_name})", data=doc_io,
+                        file_name=file_name,
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key="download_button"
+                    )
+                    st.success("Laudo gerado com sucesso! Clique no botão acima para baixar.")
+                except Exception as e:
+                    st.error(f"❌ Ocorreu um erro ao gerar o laudo:")
+                    st.exception(e)
+                    print(f"Erro detalhado na geração do DOCX: {e}\n{traceback.format_exc()}")
 
 if __name__ == "__main__":
     main()
