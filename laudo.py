@@ -836,7 +836,7 @@ def main():
                         f"Pessoa Relacionada (Item 1.{i+1})", value=st.session_state.dados_laudo['itens'][i]['pessoa'],
                         key=item_key_prefix + "pessoa",
                         help="(Opcional) Nome da pessoa associada a este material.")
-                st.markdown("---", unsafe_allow_html=False)
+                st.markdown("", unsafe_allow_html=False)
 
     st.markdown("---")
 
