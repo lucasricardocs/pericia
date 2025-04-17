@@ -202,26 +202,20 @@ def main():
             
     st.markdown("""
         <style>
-        div.upload-image-box {
-            border: 1px solid #ccc; /* Cor e espessura da borda */
-            border-radius: 10px; /* Raio para as bordas arredondadas */
-            box-shadow: 2px 2px 5px #888888; /* Deslocamento horizontal, vertical, blur e cor da sombra */
-            padding: 15px; /* Espaçamento interno do box */
-            margin-top: 10px; /* Margem superior para separar do conteúdo anterior */
-            margin-bottom: 10px; /* Margem inferior para separar do conteúdo seguinte */
+        .stContainer {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 2px 2px 5px #888888;
+            padding: 15px;
+            margin-top: 10px;
+            margin-bottom: 10px;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
-        <div class="upload-image-box">
-            <h3>3. Upload da Imagem</h3>
-            <input type="file" accept="image/png, image/jpeg" style="display: none;" id="image-upload">
-            <label for="image-upload" style="padding: 10px 15px; background-color: #f0f2f6; color: #111; border-radius: 5px; cursor: pointer;">
-                Selecionar arquivo
-            </label>
-        </div>
-    """, unsafe_allow_html=True)
+    with st.container():
+        st.subheader("3. Upload da Imagem")
+        uploaded_image = st.file_uploader("Selecione uma imagem do material recebido:", type=["png", "jpg", "jpeg"])
    
     if st.button("Gerar Laudo"):
         document = Document()
