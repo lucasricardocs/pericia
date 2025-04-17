@@ -169,7 +169,7 @@ def main():
     st.markdown("""
         <style>
         .laudo-info-box {
-            border: 1px solid #ddd; /* Borda clara */
+            border: 0.5px solid #eee; /* Borda clara */
             border-radius: 8px;
             padding: 10px;
             margin-top: 15px;
@@ -181,8 +181,8 @@ def main():
     st.markdown("""
         <div class="laudo-info-box">
             <h3>1. Informações do Laudo</h3>
-            <input type="text" placeholder="Digite o número do lacre da contraprova:" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #eee; border-radius: 4px;">
-            <input type="text" placeholder="Digite o RG da perícia:" style="width: 100%; padding: 8px; border: 1px solid #eee; border-radius: 4px;">
+            <input type="text" placeholder="Digite o número do lacre da contraprova:" style="width: 100%; padding: 8px; margin-bottom: 8px; border: 0.1px solid #eee; border-radius: 4px;">
+            <input type="text" placeholder="Digite o RG da perícia:" style="width: 100%; padding: 8px; border: 0.1px solid #eee; border-radius: 4px;">
         </div>
     """, unsafe_allow_html=True)
     
